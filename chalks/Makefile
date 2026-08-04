@@ -41,8 +41,14 @@ images:
 
 WASM_OUT = plugin/chalks_engine.wasm
 
+# Remap host-specific paths so the WASM is byte-identical across machines.
+RUST_SYSROOT = $(shell rustc --print sysroot)
+CARGO_HOME_DIR = $(shell echo "$${CARGO_HOME:-$$HOME/.cargo}")
+WORKSPACE_ROOT = $(abspath ..)
+REPRO_RUSTFLAGS = --remap-path-prefix=$(RUST_SYSROOT)=/rustc --remap-path-prefix=$(CARGO_HOME_DIR)=/cargo --remap-path-prefix=$(WORKSPACE_ROOT)=/build
+
 plugin:
-	cargo build --manifest-path ../Cargo.toml -p chalks-engine --release --target wasm32-unknown-unknown
+	RUSTFLAGS="$(REPRO_RUSTFLAGS)" cargo build --manifest-path ../Cargo.toml -p chalks-engine --release --target wasm32-unknown-unknown
 	@mkdir -p plugin
 	cp ../target/wasm32-unknown-unknown/release/chalks_engine.wasm $(WASM_OUT)
 	@ls -l $(WASM_OUT)
