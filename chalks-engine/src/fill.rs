@@ -100,8 +100,18 @@ fn scribble(polys: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path> {
             }
         }
         for s in segs {
-            spine.push(s[0]);
-            spine.push(s[1]);
+            // Densify segment with interior points to pin CR to the scanline and prevent overshoot
+            let step = 2.0 * style.spacing;
+            let [p0, p1] = s;
+            let len = (p1[0] - p0[0]).hypot(p1[1] - p0[1]);
+            let n_interior = ((len / step).floor() as usize).max(1);
+
+            spine.push(p0);
+            for k in 1..n_interior {
+                let t = k as f64 / n_interior as f64;
+                spine.push([p0[0] * (1.0 - t) + p1[0] * t, p0[1] * (1.0 - t) + p1[1] * t]);
+            }
+            spine.push(p1);
         }
     }
     if spine.len() < 2 {
@@ -147,17 +157,19 @@ mod tests {
 
     #[test]
     fn all_fill_output_stays_inside_an_inflated_bbox() {
-        for pat in ["hachure", "scribble", "shade"] {
-            let paths = run(&square(), &style(pat), &mut Rng::new(5));
-            assert!(!paths.is_empty(), "{pat} produced nothing");
-            for p in &paths {
-                for sp in &p.subpaths {
-                    for c in &sp.cubics {
-                        for q in c {
-                            assert!(
-                                q[0] > -10.0 && q[0] < 110.0 && q[1] > -10.0 && q[1] < 110.0,
-                                "{pat} point {q:?} escapes the region"
-                            );
+        for seed in 0..32 {
+            for pat in ["hachure", "scribble", "shade"] {
+                let paths = run(&square(), &style(pat), &mut Rng::new(seed));
+                assert!(!paths.is_empty(), "{pat} seed {seed} produced nothing");
+                for p in &paths {
+                    for sp in &p.subpaths {
+                        for c in &sp.cubics {
+                            for q in c {
+                                assert!(
+                                    q[0] > -8.0 && q[0] < 108.0 && q[1] > -8.0 && q[1] < 108.0,
+                                    "{pat} seed {seed} point {q:?} escapes the region"
+                                );
+                            }
                         }
                     }
                 }
