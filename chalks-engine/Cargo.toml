@@ -1,0 +1,15 @@
+[package]
+name = "chalks-engine"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Hand-drawn stroke and doodle-fill geometry for the chalks Typst package"
+repository = "https://github.com/GiggleLiu/sci-sketch"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-minimal-protocol = "0.1"
+serde = { version = "1", features = ["derive"] }
+ciborium = "0.2"

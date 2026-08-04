@@ -1,0 +1,4 @@
+# Workspace for the chalks WASM plugin crate (ships in chalks/plugin/).
+[workspace]
+resolver = "2"
+members = ["chalks-engine"]

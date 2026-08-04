@@ -1,0 +1,5 @@
+# Pins the toolchain used to rebuild chalks/plugin/chalks_engine.wasm.
+[toolchain]
+channel = "1.93.1"
+targets = ["wasm32-unknown-unknown"]
+components = ["rustfmt"]
