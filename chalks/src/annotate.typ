@@ -3,6 +3,30 @@
 #import "canvas.typ": render-ops
 #import "shapes.typ": arrow as arrow-shape, ellipse, line, rect as rect-shape
 
+/// Typst's documented default for an `auto` margin: 2.5 / 21 of the
+/// smaller page dimension. Falls back to 2.5cm if the page itself is
+/// auto-sized (width/height `auto`, e.g. a "pageless" auto-fit doc) — that
+/// formula needs a concrete dimension to work from.
+#let _auto-margin() = {
+  let w = page.width
+  let h = page.height
+  if w == auto or h == auto { 2.5cm } else { 2.5 / 21 * calc.min(w, h) }
+}
+
+/// One margin side as a plain length (pt), resolving `auto` per Typst's own
+/// default above. `page.margin` is `auto` outright if no margin was set at
+/// all (the common case — plain `#set page(...)` with no `margin:` — and
+/// the one the original version of this function panicked on, since `auto`
+/// has no `.length` field); a single relative-length if set uniformly; or a
+/// dictionary of per-side relative-lengths otherwise, where sides not
+/// mentioned in the dictionary are individually `auto` too (e.g.
+/// `margin: (top: 20pt)` leaves left/right/bottom each `auto`).
+#let _margin-side(m, key) = {
+  let v = if m == auto { auto } else if type(m) == dictionary { m.at(key, default: auto) } else { m }
+  let len = if v == auto { _auto-margin() } else { v.length }
+  len.pt()
+}
+
 /// Page content-box origin in page coordinates: (x, y) floats (pt).
 /// `location().position()` reports coordinates from the true page corner
 /// (margins included), but `place(top + left, dx:, dy:, ..)` — and the
@@ -11,15 +35,12 @@
 /// position straight into place() therefore double-counts the margin, which
 /// visually showed up as marks landing roughly a line low/right of their
 /// pin. Subtracting the content-box origin (read straight from the page's
-/// own margin setting, so it holds for any margin, symmetric or not)
-/// cancels that out. Verified against tests/test-annotate.pdf.
+/// own margin setting, so it holds for any margin, symmetric, asymmetric,
+/// or unset/auto) cancels that out. Verified against tests/test-annotate.pdf
+/// and tests/test-annotate-default-margin.typ.
 #let _page-origin() = {
   let m = page.margin
-  let side(m, key) = if type(m) == dictionary { m.at(key) } else { m }
-  (
-    x: side(m, "left").length.pt(),
-    y: side(m, "top").length.pt(),
-  )
+  (x: _margin-side(m, "left"), y: _margin-side(m, "top"))
 }
 
 /// Pin's bounding box in page coordinates: (x, y, w, h) floats (pt).
