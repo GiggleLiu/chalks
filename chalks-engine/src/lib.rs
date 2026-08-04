@@ -4,6 +4,9 @@ use wasm_minimal_protocol::*;
 #[cfg(target_arch = "wasm32")]
 initiate_protocol!();
 
+pub mod geom;
+pub mod rng;
+
 #[cfg_attr(target_arch = "wasm32", wasm_func)]
 pub fn version() -> Vec<u8> {
     format!("chalks-engine {}", env!("CARGO_PKG_VERSION")).into_bytes()
