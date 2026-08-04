@@ -6,7 +6,13 @@
 /// Plugin version string (smoke check that the binary loads).
 #let engine-version() = str(_engine.version())
 
-#let _pt(p) = (float(p.at(0)), float(p.at(1)))
+// Round to 1e-6 pt: calc.sin/cos/exp go through the platform math library,
+// whose last-ULP results vary across OSes; unrounded they would re-roll
+// auto-seed and make committed example images irreproducible in CI.
+#let _pt(p) = (
+  calc.round(float(p.at(0)), digits: 6),
+  calc.round(float(p.at(1)), digits: 6),
+)
 
 /// Engine paths -> filled curve elements, placed at (0,0) of the caller's
 /// frame. weight scales opacity (shade layering).
@@ -36,9 +42,10 @@
 /// Low-level hand-drawn stroke through `points` ((x, y) floats, pt, y-down).
 #let raw-stroke(points, closed: false, style: (:), seed: auto) = context {
   let s = resolve-style(style)
-  let seed = if seed == auto { auto-seed(("stroke", points, closed)) } else { seed }
+  let pts = points.map(_pt)
+  let seed = if seed == auto { auto-seed(("stroke", pts, closed)) } else { seed }
   let req = cbor.encode((
-    points: points.map(_pt),
+    points: pts,
     closed: closed,
     style: engine-stroke-style(s),
     seed: seed,
@@ -49,9 +56,10 @@
 /// Low-level doodle fill of closed boundary rings (even-odd: nested = hole).
 #let raw-fill(boundaries, style: (:), seed: auto) = context {
   let s = resolve-style(style)
-  let seed = if seed == auto { auto-seed(("fill", boundaries)) } else { seed }
+  let bs = boundaries.map(b => b.map(_pt))
+  let seed = if seed == auto { auto-seed(("fill", bs)) } else { seed }
   let req = cbor.encode((
-    boundaries: boundaries.map(b => b.map(_pt)),
+    boundaries: bs,
     style: engine-fill-style(s),
     seed: seed,
   ))

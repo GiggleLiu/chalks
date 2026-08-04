@@ -88,6 +88,7 @@ make test      # cargo test + plugin rebuild + full Typst suite (incl. manual) w
 make examples  # compile chalks/examples/*.typ
 make images    # re-render the gallery PNGs
 make plugin    # rebuild plugin/chalks_engine.wasm with the pinned toolchain
+               # (commit the x86_64 Linux build: `make -C chalks plugin-linux`)
 ```
 
 Design rationale and implementation plan live in

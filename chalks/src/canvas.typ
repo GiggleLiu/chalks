@@ -1,6 +1,6 @@
 // The sketch canvas: flatten op arrays, resolve styles, call the engine,
 // place the resulting curves in a sized block.
-#import "engine.typ": _engine, render-paths
+#import "engine.typ": _engine, _pt, render-paths
 #import "style.typ": auto-seed, engine-fill-style, engine-stroke-style, resolve-style
 
 #let _flip(op, h) = {
@@ -18,14 +18,14 @@
     let shift(p) = (p.at(0) + offset.at(0), p.at(1) + offset.at(1))
     let s = resolve-style(op.style)
     if op.op == "stroke" {
-      let pts = op.points.map(shift)
+      let pts = op.points.map(shift).map(_pt)
       let seed = op.style.at("seed", default: auto-seed(("stroke", pts, op.closed)))
       let req = cbor.encode((
         points: pts, closed: op.closed, style: engine-stroke-style(s), seed: seed,
       ))
       render-paths(cbor(_engine.stroke(req)).paths, s.color, s.opacity)
     } else {
-      let bs = op.boundaries.map(b => b.map(shift))
+      let bs = op.boundaries.map(b => b.map(shift).map(_pt))
       let seed = op.style.at("seed", default: auto-seed(("fill", bs)))
       let req = cbor.encode((
         boundaries: bs, style: engine-fill-style(s), seed: seed,

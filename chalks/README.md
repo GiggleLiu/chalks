@@ -99,7 +99,10 @@ make plugin
 ```
 
 run from the repo root (or `make plugin` inside `chalks/`, which delegates
-to the same recipe).
+to the same recipe). Builds are byte-reproducible per platform, but rustc
+emits functions in a host-dependent order, so the committed artifact is
+always the x86_64 Linux build (what CI verifies); regenerate it from any
+host with `make plugin-linux` (requires Docker).
 
 ## Development
 
