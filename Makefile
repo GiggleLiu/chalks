@@ -1,5 +1,5 @@
 # sci-sketch monorepo — chalks package + chalks-engine crate.
-.PHONY: all pkgroot test rust-test examples plugin clean
+.PHONY: all pkgroot test rust-test examples images plugin clean
 
 PACKAGES := chalks
 export TYPST_PACKAGE_PATH := $(CURDIR)/_pkgroot
@@ -22,6 +22,9 @@ test: pkgroot rust-test
 
 examples: pkgroot
 	@$(MAKE) -C chalks examples
+
+images: pkgroot
+	@$(MAKE) -C chalks images
 
 plugin:
 	@$(MAKE) -C chalks plugin

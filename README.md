@@ -14,12 +14,12 @@ make test      # links the local @preview/chalks package root, runs
                # cargo test -p chalks-engine, then chalks' Typst test suite
                # (including compiling manual.typ) and error-message assertions
 make examples  # compiles chalks/examples/*.typ against @preview/chalks:0.1.0
+make images    # renders chalks/examples/*.typ to chalks/images/*.png for
+               # visual review (also needs the package root, hence run from
+               # here rather than `make -C chalks images`)
 make plugin    # rebuilds plugin/chalks_engine.wasm with the pinned Rust
                # toolchain (rust-toolchain.toml) and, if available, wasm-opt
 ```
-
-`make -C chalks images` renders the examples to `chalks/images/*.png` for
-visual review.
 
 See `chalks/README.md` for the package's quick start and API. For the design
 rationale and implementation plan, see
