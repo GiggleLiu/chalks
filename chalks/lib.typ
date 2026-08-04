@@ -3,5 +3,6 @@
 #import "src/style.typ": default-style
 #import "src/shapes.typ": arrow, brace, bracket, circle, ellipse, line, path, polygon, rect, region
 #import "src/curve.typ": fn-curve
+#import "src/canvas.typ": sketch
 
 #let chalks-version = "0.1.0"
