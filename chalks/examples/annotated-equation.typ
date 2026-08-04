@@ -9,4 +9,4 @@ shows how #pin("mass")[mass] converts entirely into #pin("energy")[energy].
 
 #annotate(circle: "c2", color: rgb("#a03b2e"))
 #annotate(underline: "m")
-#annotate(arrow: ("mass", "energy"))
+#annotate(arrow: ("mass", "energy"), dy: 16pt)
