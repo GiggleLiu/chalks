@@ -1,5 +1,5 @@
 # sci-sketch monorepo — chalks package + chalks-engine crate.
-.PHONY: all pkgroot test rust-test examples images plugin clean
+.PHONY: all pkgroot test rust-test examples images plugin install clean
 
 PACKAGES := chalks
 export TYPST_PACKAGE_PATH := $(CURDIR)/_pkgroot
@@ -28,6 +28,15 @@ images: pkgroot
 
 plugin:
 	@$(MAKE) -C chalks plugin
+
+# Link this checkout into Typst's user package directory so
+# `@preview/chalks:0.1.0` resolves locally in any document.
+TYPST_DATA_DIR := $(if $(filter Darwin,$(shell uname -s)),$(HOME)/Library/Application Support,$(if $(XDG_DATA_HOME),$(XDG_DATA_HOME),$(HOME)/.local/share))
+
+install:
+	@mkdir -p "$(TYPST_DATA_DIR)/typst/packages/preview/chalks"
+	@ln -sfn "$(CURDIR)/chalks" "$(TYPST_DATA_DIR)/typst/packages/preview/chalks/0.1.0"
+	@echo "linked @preview/chalks:0.1.0 -> $(CURDIR)/chalks"
 
 clean:
 	rm -rf _pkgroot
