@@ -3,7 +3,7 @@
 Hand-drawn pencil/chalk-style figures and annotations for Typst. Shapes are
 built as point lists in pure Typst, then a Rust → WASM engine (`chalks-engine`)
 perturbs them into sketchy, variable-width filled outlines — jitter, bowing,
-taper, multi-pass strokes, and three doodle fill patterns.
+taper, multi-pass strokes, and two reliable fill patterns.
 
 ## Gallery
 
@@ -19,7 +19,7 @@ taper, multi-pass strokes, and three doodle fill patterns.
 
 #chalks.sketch(200pt, 100pt,
   chalks.rect((10, 10), (90, 60), fill: "hachure"),
-  chalks.circle((150, 40), 30, fill: "scribble"),
+  chalks.circle((150, 40), 30, fill: "shade"),
   chalks.arrow((100, 40), (120, 40)),
 )
 ```
@@ -55,7 +55,7 @@ clipped away or offset from its pin).
 ## Style keys
 
 Every shape/stroke/fill call accepts style overrides as named arguments
-(`roughness: 1.5`, `fill: "scribble"`, `seed: 42`, …); unset keys fall back to
+(`roughness: 1.5`, `fill: "shade"`, `seed: 42`, …); unset keys fall back to
 the active theme, then to these defaults:
 
 | Key          | Applies to    | Meaning                                                         | Default |
@@ -65,14 +65,19 @@ the active theme, then to these defaults:
 | `width`      | stroke + fill | nominal stroke width (pt)                                       | 1.2     |
 | `taper`      | stroke        | pressure variation 0-1 (0 = uniform, 1 = strong taper at ends)   | 0.5     |
 | `passes`     | stroke        | number of overlapping strokes (1 = single, 2 = sketchy double)   | 1       |
-| `pattern`    | fill          | `hachure` \| `scribble` \| `shade`                               | hachure |
-| `angle`      | fill          | hachure/scribble direction (deg)                                 | 45      |
+| `pattern`    | fill          | `hachure` \| `shade`                                              | hachure |
+| `angle`      | fill          | hachure/shade direction (deg)                                    | 45      |
 | `spacing`    | fill          | gap between doodle lines (pt)                                    | 4       |
 | `color`      | stroke + fill | fill/stroke color                                                 | `#44464a` |
 | `opacity`    | stroke + fill | overall opacity                                                   | 100%    |
 
 Seeds are derived deterministically from input geometry by default, so
 unchanged figures never re-roll between compiles.
+
+For `path`, `width` is the full nominal stroke thickness (so a desired
+half-width/radius of 3 pt means `width: 6`), while `smoothness` controls how
+roundly the curve passes through its points. Chalks does not currently provide
+a fixed-radius corner-rounding parameter.
 
 ## Themes
 

@@ -5,7 +5,7 @@
 
 #chalks.sketch(380pt, 200pt,
   chalks.rect((10, 10), (100, 70), fill: "hachure"),
-  chalks.ellipse((190, 45), (45, 32), fill: "scribble", color: rgb("#8a4a3a")),
+  chalks.ellipse((190, 45), (45, 32), color: rgb("#8a4a3a")),
   chalks.circle((320, 45), 34, fill: "shade"),
   chalks.arrow((10, 110), (110, 110)),
   chalks.brace((140, 105), (250, 105), amplitude: 10),

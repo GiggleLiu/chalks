@@ -37,6 +37,23 @@
 
 /// Hand-drawn canvas. Coordinates are floats in pt; `origin: "top-left"`
 /// (default, y-down like Typst) or "bottom-left" (y-up, math convention).
+///
+/// ```typst
+/// #sketch(180pt, 90pt,
+///   line((10, 70), (160, 20)),
+///   circle((90, 45), 25),
+/// )
+/// ```
+///
+/// The canvas intentionally does not clip, allowing rough outlines to extend
+/// slightly beyond its nominal bounds.
+///
+/// - width (length): Canvas width.
+/// - height (length): Canvas height.
+/// - origin (str): `"top-left"` for y-down coordinates or `"bottom-left"`
+///   for y-up coordinates. Default: `"top-left"`.
+/// - ..elements (arguments): Shape operations returned by Chalks builders
+///   such as `line`, `path`, `rect`, and `circle`.
 #let sketch(width, height, origin: "top-left", ..elements) = {
   if origin not in ("top-left", "bottom-left") {
     panic("chalks: origin must be \"top-left\" or \"bottom-left\"")

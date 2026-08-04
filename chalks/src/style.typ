@@ -2,6 +2,10 @@
 // boundary; color/opacity are applied Typst-side when rendering.
 #import "theme.typ": theme-state
 
+/// Complete fallback style used when neither a theme nor a call overrides a key.
+///
+/// Copy and merge this dictionary when building a custom reusable theme. Stroke
+/// widths and fill spacing are numeric canvas points, not Typst lengths.
 #let default-style = (
   smoothness: 0.7,
   roughness: 1.0,
@@ -34,7 +38,7 @@
       panic("chalks: " + k + " must be positive")
     }
   }
-  if "pattern" in s and s.pattern not in ("hachure", "scribble", "shade") {
+  if "pattern" in s and s.pattern not in ("hachure", "shade") {
     panic("chalks: unknown fill pattern: " + s.pattern)
   }
   if "passes" in s and s.passes < 1 {
@@ -49,7 +53,18 @@
   default-style + theme-state.get() + overrides
 }
 
-/// Set the document-wide chalks theme from here on.
+/// Sets document-wide style overrides for subsequent Chalks rendering.
+///
+/// ```typst
+/// #chalks-theme(chalk)
+/// #chalks-theme((roughness: 1.3, width: 1.8, color: navy))
+/// ```
+///
+/// A preset or partial style dictionary is merged over `default-style`.
+/// Individual shape arguments still take precedence.
+///
+/// - t (dictionary): Any subset of `smoothness`, `roughness`, `width`,
+///   `taper`, `passes`, `pattern`, `angle`, `spacing`, `color`, and `opacity`.
 #let chalks-theme(t) = {
   validate-style(t)
   theme-state.update(t)

@@ -20,9 +20,17 @@ Hand-drawn pencil/chalk figures for scientific documents. Engine:
 
 #example("#sketch(180pt, 60pt,\n  line((10, 30), (170, 30), roughness: 1.5),\n)")
 
+== Paths
+
+`path` passes through its points in order. `width` is the full stroke
+thickness; `smoothness` controls how roundly the curve flows through the
+points. There is no fixed-radius corner-rounding parameter.
+
+#example("#sketch(180pt, 75pt,\n  path(((10, 60), (55, 15), (105, 55), (170, 20)),\n    width: 2.4, smoothness: 0.8),\n)")
+
 == Shapes and fills
 
-#example("#sketch(180pt, 90pt,\n  rect((10, 10), (70, 50), fill: \"hachure\"),\n  circle((130, 35), 28, fill: \"scribble\"),\n)")
+#example("#sketch(180pt, 90pt,\n  rect((10, 10), (70, 50), fill: \"hachure\"),\n  circle((130, 35), 28, fill: \"shade\"),\n)")
 
 == Annotations
 

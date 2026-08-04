@@ -159,9 +159,9 @@ impl FillRequest {
         if self.style.spacing <= 0.0 {
             return Err("chalks-engine: spacing must be positive".into());
         }
-        if !["hachure", "scribble", "shade"].contains(&self.style.pattern.as_str()) {
+        if !["hachure", "shade"].contains(&self.style.pattern.as_str()) {
             return Err(format!(
-                "chalks-engine: unknown fill pattern: {} (expected hachure, scribble, or shade)",
+                "chalks-engine: unknown fill pattern: {} (expected hachure or shade)",
                 self.style.pattern
             ));
         }

@@ -3,7 +3,9 @@
 
 #let _engine = plugin("../plugin/chalks_engine.wasm")
 
-/// Plugin version string (smoke check that the binary loads).
+/// Returns the bundled Chalks WASM engine version string.
+///
+/// This is mainly useful for diagnostics and package smoke tests.
 #let engine-version() = str(_engine.version())
 
 // Round to 1e-6 pt: calc.sin/cos/exp go through the platform math library,
@@ -39,7 +41,19 @@
   }
 }
 
-/// Low-level hand-drawn stroke through `points` ((x, y) floats, pt, y-down).
+/// Draws a low-level hand-sketched stroke directly through explicit points.
+///
+/// Prefer `path` inside `sketch` for normal figures. This function bypasses
+/// shape builders and returns placed content directly.
+///
+/// - points (array): Two or more `(x, y)` points as numbers in points, with
+///   positive y downward.
+/// - closed (bool): Join the last point to the first. Default: `false`.
+/// - style (dictionary): Engine stroke keys: `smoothness`, `roughness`,
+///   `width`, `taper`, and `passes`; rendering keys `color` and `opacity` are
+///   also accepted. Default: `(:)`.
+/// - seed (auto, int): Deterministic RNG seed; `auto` derives one from the
+///   geometry. Default: `auto`.
 #let raw-stroke(points, closed: false, style: (:), seed: auto) = context {
   let s = resolve-style(style)
   let pts = points.map(_pt)
@@ -53,7 +67,18 @@
   render-paths(cbor(_engine.stroke(req)).paths, s.color, s.opacity)
 }
 
-/// Low-level doodle fill of closed boundary rings (even-odd: nested = hole).
+/// Draws a low-level fill directly from explicit closed boundary rings.
+///
+/// Nested rings are holes under the even-odd rule. Prefer a filled shape or
+/// `region` inside `sketch` for normal figures.
+///
+/// - boundaries (array): Array of rings, each containing at least three
+///   `(x, y)` points as numbers in points, with positive y downward.
+/// - style (dictionary): Fill keys: `pattern` (`"hachure"` or `"shade"`),
+///   `smoothness`, `roughness`, `width`, `angle`, and `spacing`; `color` and
+///   `opacity` are also accepted. Default: `(:)`.
+/// - seed (auto, int): Deterministic RNG seed; `auto` derives one from the
+///   boundaries. Default: `auto`.
 #let raw-fill(boundaries, style: (:), seed: auto) = context {
   let s = resolve-style(style)
   let bs = boundaries.map(b => b.map(_pt))

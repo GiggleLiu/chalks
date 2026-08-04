@@ -15,7 +15,6 @@ pub fn run(boundaries: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path
         })
         .collect();
     match style.pattern.as_str() {
-        "scribble" => scribble(&polys, style, rng),
         "shade" => shade(&polys, style, rng),
         _ => hachure(&polys, style, style.angle, style.spacing, 1.0, rng),
     }
@@ -113,87 +112,6 @@ fn hachure(
     paths
 }
 
-/// Even-odd point-in-polygon test across all boundary rings.
-fn contains(polys: &[Vec<Pt>], p: Pt) -> bool {
-    let mut inside = false;
-    for poly in polys {
-        for i in 0..poly.len() {
-            let (a, b) = (poly[i], poly[(i + 1) % poly.len()]);
-            if (a[1] > p[1]) != (b[1] > p[1])
-                && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]
-            {
-                inside = !inside;
-            }
-        }
-    }
-    inside
-}
-
-/// A short connector may join adjacent scan rows only when sampled points stay
-/// inside the even-odd region. This prevents a scribble from cutting across a
-/// hole or jumping between disconnected components.
-fn connector_is_inside(polys: &[Vec<Pt>], from: Pt, to: Pt, spacing: f64) -> bool {
-    let len = (to[0] - from[0]).hypot(to[1] - from[1]);
-    if len > spacing * 2.5 {
-        return false;
-    }
-    let samples = 8;
-    (1..samples).all(|i| {
-        let t = i as f64 / samples as f64;
-        contains(
-            polys,
-            [
-                from[0] * (1.0 - t) + to[0] * t,
-                from[1] * (1.0 - t) + to[1] * t,
-            ],
-        )
-    })
-}
-
-/// Serpentine doodles. A simple connected region is one continuous stroke;
-/// holes and disconnected components split it into safe sub-strokes.
-fn scribble(polys: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path> {
-    let mut spines: Vec<Vec<Pt>> = vec![Vec::new()];
-    for (i, row) in rows(polys, style.angle, style.spacing, rng, style.roughness)
-        .iter()
-        .enumerate()
-    {
-        let mut segs: Vec<[Pt; 2]> = row.clone();
-        if i % 2 == 1 {
-            segs.reverse();
-            for s in &mut segs {
-                s.swap(0, 1);
-            }
-        }
-        for s in segs {
-            // Densify segment with interior points to pin CR to the scanline and prevent overshoot
-            let step = 2.0 * style.spacing;
-            let [p0, p1] = s;
-            let len = (p1[0] - p0[0]).hypot(p1[1] - p0[1]);
-            let n_interior = ((len / step).floor() as usize).max(1);
-
-            let spine = spines.last_mut().unwrap();
-            if let Some(&last) = spine.last() {
-                if !connector_is_inside(polys, last, p0, style.spacing) {
-                    spines.push(Vec::new());
-                }
-            }
-            let spine = spines.last_mut().unwrap();
-            spine.push(p0);
-            for k in 1..n_interior {
-                let t = k as f64 / n_interior as f64;
-                spine.push([p0[0] * (1.0 - t) + p1[0] * t, p0[1] * (1.0 - t) + p1[1] * t]);
-            }
-            spine.push(p1);
-        }
-    }
-    let mut out = Vec::new();
-    for spine in spines.into_iter().filter(|spine| spine.len() >= 2) {
-        out.extend(stroke::run(&spine, false, &doodle_style(style, 0.85), rng));
-    }
-    out
-}
-
 /// Layered soft shading: three lighter hachure passes at drifting angles.
 fn shade(polys: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path> {
     let layers = [(0.0, 0.55), (-8.0, 0.35), (6.0, 0.25)];
@@ -236,7 +154,7 @@ mod tests {
     #[test]
     fn all_fill_output_stays_inside_an_inflated_bbox() {
         for seed in 0..32 {
-            for pat in ["hachure", "scribble", "shade"] {
+            for pat in ["hachure", "shade"] {
                 let paths = run(&square(), &style(pat), &mut Rng::new(seed));
                 assert!(!paths.is_empty(), "{pat} seed {seed} produced nothing");
                 for p in &paths {
@@ -256,12 +174,6 @@ mod tests {
     }
 
     #[test]
-    fn scribble_is_one_continuous_doodle() {
-        let paths = run(&square(), &style("scribble"), &mut Rng::new(5));
-        assert_eq!(paths.len(), 1, "scribble is a single stroke pass");
-    }
-
-    #[test]
     fn shade_layers_carry_reduced_weights() {
         let paths = run(&square(), &style("shade"), &mut Rng::new(5));
         assert!(paths.iter().all(|p| p.weight < 1.0));
@@ -270,7 +182,7 @@ mod tests {
 
     #[test]
     fn every_pattern_leaves_holes_unfilled() {
-        for pattern in ["hachure", "scribble", "shade"] {
+        for pattern in ["hachure", "shade"] {
             let mut b = square();
             b.push(vec![[40.0, 40.0], [60.0, 40.0], [60.0, 60.0], [40.0, 60.0]]); // hole (even-odd)
             let paths = run(&b, &style(pattern), &mut Rng::new(5));

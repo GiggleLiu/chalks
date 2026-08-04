@@ -10,7 +10,7 @@ with no external tooling.
 
 <table>
 <tr>
-<td align="center"><a href="chalks/examples/gallery.typ"><img src="chalks/images/gallery.png" width="290" alt="Sketchy primitives: hachured rectangle, scribbled ellipse, shaded circle, arrows, braces, and hand-drawn function curves"></a><br>every primitive and fill pattern</td>
+<td align="center"><a href="chalks/examples/gallery.typ"><img src="chalks/images/gallery.png" width="290" alt="Sketchy primitives: hachured rectangle, rust-colored ellipse, shaded circle, arrows, braces, and hand-drawn function curves"></a><br>every primitive and fill pattern</td>
 <td align="center"><a href="chalks/examples/annotated-equation.typ"><img src="chalks/images/annotated-equation.png" width="290" alt="A typeset equation with a hand-drawn ring around c squared, an underline, and a sketchy arrow"></a><br>pin &amp; annotate typeset math</td>
 <td align="center"><a href="chalks/examples/chalkboard.typ"><img src="chalks/images/chalkboard.png" width="290" alt="Chalk-style light strokes on a dark board with a hachured circle and a curve"></a><br>chalk theme on a dark board</td>
 </tr>
@@ -21,7 +21,7 @@ with no external tooling.
 | Package | Purpose | Version |
 | --- | --- | --- |
 | [`chalks`](chalks/) | Sketch canvas, shape/curve builders, pin-anchored annotations, and `pencil`/`ink`/`chalk` themes. | 0.1.0 |
-| [`chalks-engine`](chalks-engine/) | Rust crate (compiled to a bundled WASM plugin) generating the hand-drawn geometry: smoothing, jitter, taper, hachure/scribble/shade fills. | 0.1.0 |
+| [`chalks-engine`](chalks-engine/) | Rust crate (compiled to a bundled WASM plugin) generating the hand-drawn geometry: smoothing, jitter, taper, hachure/shade fills. | 0.1.0 |
 
 Only two operations cross the WASM boundary — `stroke` and `fill` — both
 deterministic per seed, so unchanged figures never re-roll between compiles.
@@ -59,7 +59,7 @@ A sketch is a plain coordinate canvas of hand-drawn primitives:
 
 #chalks.sketch(240pt, 120pt,
   chalks.rect((10, 10), (90, 60), fill: "hachure"),
-  chalks.circle((160, 40), 30, fill: "scribble"),
+  chalks.circle((160, 40), 30, fill: "shade"),
   chalks.arrow((105, 40), (125, 40)),
   chalks.brace((10, 85), (100, 85), amplitude: 10),
 )
