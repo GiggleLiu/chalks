@@ -4,5 +4,7 @@
 #import "src/shapes.typ": arrow, brace, bracket, circle, ellipse, line, path, polygon, rect, region
 #import "src/curve.typ": fn-curve
 #import "src/canvas.typ": sketch
+#import "src/pin.typ": pin
+#import "src/annotate.typ": annotate
 
 #let chalks-version = "0.1.0"
