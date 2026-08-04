@@ -1,12 +1,20 @@
-#import "../lib.typ": raw-stroke
-// Task 10: raw-stroke now wraps its body in context to access theme-state,
-// which makes its return value opaque to repr(). Determinism is still
-// guaranteed by the auto-seed mechanism (seeds are generated deterministically
-// from input geometry). This test verifies that calls with the same geometry
-// and different geometry complete without error.
-#let a = raw-stroke(((0, 0), (50, 20), (100, 0)))
-#let b = raw-stroke(((0, 0), (50, 20), (100, 0)))
-// Both a and b complete successfully (same geometry, deterministic seed).
-#let c = raw-stroke(((0, 0), (50, 21), (100, 0)))
-// c completes successfully (different geometry, different seed).
+// Determinism: same request bytes -> identical engine output bytes;
+// different geometry -> different output. Bypasses context/theme by
+// calling the plugin directly.
+#import "../src/engine.typ": _engine
+#import "../src/style.typ": auto-seed, default-style, engine-stroke-style
+
+#let req(points) = cbor.encode((
+  points: points.map(p => (float(p.at(0)), float(p.at(1)))),
+  closed: false,
+  style: engine-stroke-style(default-style),
+  seed: auto-seed(("stroke", points, false)),
+))
+#let p1 = ((0.0, 0.0), (50.0, 20.0), (100.0, 0.0))
+#let p2 = ((0.0, 0.0), (50.0, 21.0), (100.0, 0.0))
+#let a = _engine.stroke(req(p1))
+#let b = _engine.stroke(req(p1))
+#let c = _engine.stroke(req(p2))
+#assert.eq(a, b)
+#assert(a != c)
 Deterministic.
