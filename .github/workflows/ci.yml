@@ -23,3 +23,5 @@ jobs:
       - run: make images
       - name: Check committed generated artifacts
         run: git diff --exit-code -- chalks/plugin/chalks_engine.wasm chalks/images
+      - name: typst-package-check
+        run: docker run --rm -v "$PWD/chalks:/data" ghcr.io/typst/package-check check
