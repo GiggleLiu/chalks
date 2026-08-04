@@ -34,7 +34,7 @@
 }
 
 /// Low-level hand-drawn stroke through `points` ((x, y) floats, pt, y-down).
-#let raw-stroke(points, closed: false, style: (:), seed: auto) = {
+#let raw-stroke(points, closed: false, style: (:), seed: auto) = context {
   let s = resolve-style(style)
   let seed = if seed == auto { auto-seed(("stroke", points, closed)) } else { seed }
   let req = cbor.encode((
@@ -47,7 +47,7 @@
 }
 
 /// Low-level doodle fill of closed boundary rings (even-odd: nested = hole).
-#let raw-fill(boundaries, style: (:), seed: auto) = {
+#let raw-fill(boundaries, style: (:), seed: auto) = context {
   let s = resolve-style(style)
   let seed = if seed == auto { auto-seed(("fill", boundaries)) } else { seed }
   let req = cbor.encode((

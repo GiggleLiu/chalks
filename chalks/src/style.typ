@@ -1,5 +1,7 @@
 // Style vocabulary shared by every chalks call. Engine keys cross the WASM
 // boundary; color/opacity are applied Typst-side when rendering.
+#import "theme.typ": theme-state
+
 #let default-style = (
   smoothness: 0.7,
   roughness: 1.0,
@@ -40,11 +42,17 @@
   }
 }
 
-/// default-style overlaid with per-call overrides. (Task 10 inserts the
-/// document theme between the two layers.)
+/// default-style + document theme + per-call overrides.
+/// Must be called inside `context` (canvas and annotate both are).
 #let resolve-style(overrides) = {
   validate-style(overrides)
-  default-style + overrides
+  default-style + theme-state.get() + overrides
+}
+
+/// Set the document-wide chalks theme from here on.
+#let chalks-theme(t) = {
+  validate-style(t)
+  theme-state.update(t)
 }
 
 #let engine-stroke-style(s) = {
