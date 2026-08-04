@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "Hand-drawn stroke and doodle-fill geometry for the chalks Typst package"
-repository = "https://github.com/GiggleLiu/sci-sketch"
+repository = "https://github.com/GiggleLiu/chalks"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

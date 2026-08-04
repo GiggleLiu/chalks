@@ -39,8 +39,8 @@ Until then (or to use your local checkout), clone the repo and link the
 package into Typst's local package directory:
 
 ```sh
-git clone https://github.com/GiggleLiu/sci-sketch
-cd sci-sketch
+git clone https://github.com/GiggleLiu/chalks
+cd chalks
 make install   # symlinks chalks/ into {data-dir}/typst/packages/preview/chalks/0.1.0
 ```
 
