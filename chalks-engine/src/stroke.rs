@@ -7,7 +7,12 @@ const SAMPLE_STEP: f64 = 2.0; // pt between perturbation samples
 /// One hand-drawn stroke through `points` -> `passes` filled-outline paths.
 pub fn run(points: &[Pt], closed: bool, style: &StrokeStyle, rng: &mut Rng) -> Vec<Path> {
     let segs = catmull_rom(points, closed, style.smoothness);
-    let base = sample(points[0], &segs, SAMPLE_STEP);
+    let mut base = sample(points[0], &segs, SAMPLE_STEP);
+    // For closed curves, sample() appends the wrap-around duplicate; drop it before perturbation
+    // to avoid the seam jitter creating a near-duplicate kink.
+    if closed && base.len() > 1 {
+        base.pop();
+    }
     (0..style.passes)
         .map(|pass| {
             let fade = if pass == 0 { 1.0 } else { 0.55 };
@@ -67,11 +72,6 @@ fn outline(spine: &[Pt], style: &StrokeStyle, closed: bool, rng: &mut Rng) -> Ve
         right.push(add(spine[i], mul(ns[i], -hw)));
     }
     if closed {
-        // Drop the duplicated wrap-around sample before ring-closing.
-        if dist(*left.first().unwrap(), *left.last().unwrap()) < 1e-6 {
-            left.pop();
-            right.pop();
-        }
         vec![ring(&left), ring(&right)]
     } else {
         right.reverse();
@@ -143,6 +143,60 @@ mod tests {
                 for p in c {
                     assert!(p[1].abs() <= slack, "point {:?} strays past slack {}", p, slack);
                     assert!(p[0] >= -slack && p[0] <= 100.0 + slack);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn closed_stroke_seam_has_no_wrap_duplicate_vertex() {
+        // Regression test: after dropping the wrap-duplicate before perturbation,
+        // a closed stroke ring should have no artificially-short segment at the seam.
+        // For closed curves, the number of cubics should be N (one per point),
+        // and the wrap segment (last cubic, from last to first point) should have
+        // similar magnitude to other segments (not a tiny near-duplicate seam).
+        let pts = [[0.0, 0.0], [80.0, 0.0], [80.0, 60.0], [0.0, 60.0]];
+        let paths = run(&pts, true, &style(), &mut Rng::new(7));
+        assert_eq!(paths[0].subpaths.len(), 2);
+
+        for sp in &paths[0].subpaths {
+            // For a closed curve, catmull_rom produces one cubic per point.
+            // So cubics.len() should equal the number of ring vertices.
+            let n_cubics = sp.cubics.len();
+            assert!(n_cubics > 0);
+
+            // Extract the control points to verify no seam duplicate.
+            // Each cubic is [c1, c2, to]; the path closes from the last 'to' back to 'start'.
+            let mut vertices = vec![sp.start];
+            for c in &sp.cubics {
+                vertices.push(c[2]); // Each cubic's endpoint
+            }
+
+            // For a proper closed ring of N points, catmull_rom creates N cubics,
+            // so vertices should have first == last (the wrap-around).
+            if vertices.len() > 2 {
+                let last = *vertices.last().unwrap();
+                let first = vertices[0];
+                assert!(
+                    dist(last, first) < 2.0, // Last cubic ends near the first point (expected wrap).
+                    "closed ring wrap segment distance {} should be smooth, not near zero (which signals a duplicate seam)",
+                    dist(last, first)
+                );
+
+                // Check that the last cubic (seam segment) is not anomalously short.
+                // Get the last two distinct vertices before the wrap.
+                if vertices.len() > 2 {
+                    let penultimate = vertices[vertices.len() - 2];
+                    let last_seg_len = dist(penultimate, last);
+                    let second_last_seg_len = dist(vertices[vertices.len() - 3], penultimate);
+                    let ratio = last_seg_len / (second_last_seg_len + 1e-9);
+
+                    // The last segment should be at least 30% the size of the previous (not a tiny duplicate).
+                    assert!(
+                        ratio >= 0.3,
+                        "last segment length {} is only {:.1}% of previous {} (suggests seam duplicate)",
+                        last_seg_len, ratio * 100.0, second_last_seg_len
+                    );
                 }
             }
         }
