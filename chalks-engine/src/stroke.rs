@@ -149,56 +149,28 @@ mod tests {
     }
 
     #[test]
-    fn closed_stroke_seam_has_no_wrap_duplicate_vertex() {
-        // Regression test: after dropping the wrap-duplicate before perturbation,
-        // a closed stroke ring should have no artificially-short segment at the seam.
-        // For closed curves, the number of cubics should be N (one per point),
-        // and the wrap segment (last cubic, from last to first point) should have
-        // similar magnitude to other segments (not a tiny near-duplicate seam).
+    fn closed_stroke_ring_has_one_cubic_per_deduped_spine_point() {
+        // Structural regression test: verifies the wrap-duplicate is dropped before perturbation.
+        // For a closed stroke:
+        // - sample() produces raw_spine_len points (including wrap-duplicate first == last)
+        // - The fix drops the duplicate: base becomes raw_spine_len - 1 points
+        // - outline() passes these points to ring()
+        // - ring() calls catmull_rom(..., closed=true), which creates one cubic per point
+        // - So each ring should have exactly raw_spine_len - 1 cubics
+        //
+        // Pre-fix (no pop): ring gets raw_spine_len points → raw_spine_len cubics → TEST FAILS
+        // Post-fix (with pop): ring gets raw_spine_len - 1 points → raw_spine_len - 1 cubics → TEST PASSES
         let pts = [[0.0, 0.0], [80.0, 0.0], [80.0, 60.0], [0.0, 60.0]];
-        let paths = run(&pts, true, &style(), &mut Rng::new(7));
-        assert_eq!(paths[0].subpaths.len(), 2);
+        let s = style();
+        let segs = crate::geom::catmull_rom(&pts, true, s.smoothness);
+        let raw_spine_len = crate::geom::sample(pts[0], &segs, SAMPLE_STEP).len();
+        let expected_cubics = raw_spine_len - 1; // After dropping the duplicate
 
+        let paths = run(&pts, true, &s, &mut Rng::new(7));
         for sp in &paths[0].subpaths {
-            // For a closed curve, catmull_rom produces one cubic per point.
-            // So cubics.len() should equal the number of ring vertices.
-            let n_cubics = sp.cubics.len();
-            assert!(n_cubics > 0);
-
-            // Extract the control points to verify no seam duplicate.
-            // Each cubic is [c1, c2, to]; the path closes from the last 'to' back to 'start'.
-            let mut vertices = vec![sp.start];
-            for c in &sp.cubics {
-                vertices.push(c[2]); // Each cubic's endpoint
-            }
-
-            // For a proper closed ring of N points, catmull_rom creates N cubics,
-            // so vertices should have first == last (the wrap-around).
-            if vertices.len() > 2 {
-                let last = *vertices.last().unwrap();
-                let first = vertices[0];
-                assert!(
-                    dist(last, first) < 2.0, // Last cubic ends near the first point (expected wrap).
-                    "closed ring wrap segment distance {} should be smooth, not near zero (which signals a duplicate seam)",
-                    dist(last, first)
-                );
-
-                // Check that the last cubic (seam segment) is not anomalously short.
-                // Get the last two distinct vertices before the wrap.
-                if vertices.len() > 2 {
-                    let penultimate = vertices[vertices.len() - 2];
-                    let last_seg_len = dist(penultimate, last);
-                    let second_last_seg_len = dist(vertices[vertices.len() - 3], penultimate);
-                    let ratio = last_seg_len / (second_last_seg_len + 1e-9);
-
-                    // The last segment should be at least 30% the size of the previous (not a tiny duplicate).
-                    assert!(
-                        ratio >= 0.3,
-                        "last segment length {} is only {:.1}% of previous {} (suggests seam duplicate)",
-                        last_seg_len, ratio * 100.0, second_last_seg_len
-                    );
-                }
-            }
+            assert_eq!(sp.cubics.len(), expected_cubics,
+                "ring must be built from the deduped spine: expected {} cubics (raw_spine_len {} - 1 duplicate)",
+                expected_cubics, raw_spine_len);
         }
     }
 }
