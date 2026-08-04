@@ -84,7 +84,7 @@ for the full API and style-key reference, and
 ## Development
 
 ```sh
-make test      # cargo test + full Typst suite (incl. manual) with local @preview resolution
+make test      # cargo test + plugin rebuild + full Typst suite (incl. manual) with local @preview resolution
 make examples  # compile chalks/examples/*.typ
 make images    # re-render the gallery PNGs
 make plugin    # rebuild plugin/chalks_engine.wasm with the pinned toolchain

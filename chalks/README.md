@@ -106,7 +106,7 @@ to the same recipe).
 From the repo root (needed so `@preview/chalks:0.1.0` resolves for examples):
 
 ```sh
-make test      # compile tests + manual, run error-message assertions
+make test      # rebuild plugin, compile tests + manual, run error-message assertions
 make examples  # compile chalks/examples/*.typ via @preview/chalks:0.1.0
 ```
 
