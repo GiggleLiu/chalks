@@ -1,4 +1,4 @@
-#import "../lib.typ": arrow, brace, bracket, circle, ellipse, fn-curve, line, path, polygon, rect, region
+#import "@preview/chalks:0.1.0": arrow, brace, bracket, circle, ellipse, fn-curve, line, path, polygon, rect, region
 
 #let ops = line((0, 0), (10, 10), roughness: 2.0)
 #assert.eq(ops.len(), 1)

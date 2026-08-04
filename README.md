@@ -32,7 +32,7 @@ Once published to [Typst Universe](https://typst.app/universe), importing it
 is all you need — Typst downloads the package on first compile:
 
 ```typst
-#import "@preview/chalks:0.1.0": *
+#import "@preview/chalks:0.1.0" as chalks
 ```
 
 Until then (or to use your local checkout), clone the repo and link the
@@ -55,13 +55,13 @@ or `${XDG_DATA_HOME:-~/.local/share}/typst/packages/preview/chalks/0.1.0`
 A sketch is a plain coordinate canvas of hand-drawn primitives:
 
 ```typst
-#import "@preview/chalks:0.1.0": *
+#import "@preview/chalks:0.1.0" as chalks
 
-#sketch(240pt, 120pt,
-  rect((10, 10), (90, 60), fill: "hachure"),
-  circle((160, 40), 30, fill: "scribble"),
-  arrow((105, 40), (125, 40)),
-  brace((10, 85), (100, 85), amplitude: 10),
+#chalks.sketch(240pt, 120pt,
+  chalks.rect((10, 10), (90, 60), fill: "hachure"),
+  chalks.circle((160, 40), 30, fill: "scribble"),
+  chalks.arrow((105, 40), (125, 40)),
+  chalks.brace((10, 85), (100, 85), amplitude: 10),
 )
 ```
 
@@ -76,8 +76,8 @@ $ E = m #pin("c2")[$c^2$] $
 ```
 
 Every call accepts style overrides (`roughness: 1.5`, `smoothness: 0.2`,
-`seed: 42`, …), and `#chalks-theme(chalk)` switches the whole document to
-light-on-dark chalk for slides. See [`chalks/README.md`](chalks/README.md)
+`seed: 42`, …), and `#chalks.chalks-theme(chalks.chalk)` switches the whole
+document to light-on-dark chalk for slides. See [`chalks/README.md`](chalks/README.md)
 for the full API and style-key reference, and
 [`chalks/manual.typ`](chalks/manual.typ) for a compiled walkthrough.
 

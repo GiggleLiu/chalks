@@ -1,4 +1,4 @@
-#import "../lib.typ": arrow, brace, circle, fn-curve, line, rect, sketch
+#import "@preview/chalks:0.1.0": arrow, brace, circle, fn-curve, line, rect, sketch
 #set page(width: 260pt, height: 320pt, margin: 10pt)
 
 #sketch(240pt, 140pt,

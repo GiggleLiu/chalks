@@ -1,4 +1,4 @@
-#import "lib.typ"
+#import "@preview/chalks:0.1.0" as lib
 #set page(width: 460pt, margin: 24pt, height: auto)
 #set text(size: 10pt)
 

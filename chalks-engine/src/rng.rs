@@ -32,10 +32,19 @@ mod tests {
 
     #[test]
     fn deterministic_for_same_seed() {
-        let a: Vec<f64> = { let mut r = Rng::new(42); (0..8).map(|_| r.uniform()).collect() };
-        let b: Vec<f64> = { let mut r = Rng::new(42); (0..8).map(|_| r.uniform()).collect() };
+        let a: Vec<f64> = {
+            let mut r = Rng::new(42);
+            (0..8).map(|_| r.uniform()).collect()
+        };
+        let b: Vec<f64> = {
+            let mut r = Rng::new(42);
+            (0..8).map(|_| r.uniform()).collect()
+        };
         assert_eq!(a, b);
-        let c: Vec<f64> = { let mut r = Rng::new(43); (0..8).map(|_| r.uniform()).collect() };
+        let c: Vec<f64> = {
+            let mut r = Rng::new(43);
+            (0..8).map(|_| r.uniform()).collect()
+        };
         assert_ne!(a, c);
     }
 

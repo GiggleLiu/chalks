@@ -1,4 +1,4 @@
-#import "../lib.typ": raw-stroke, raw-fill
+#import "@preview/chalks:0.1.0": raw-stroke, raw-fill
 #set page(width: 200pt, height: 240pt, margin: 10pt)
 
 // A wavy open stroke, a closed square stroke, and all three fill patterns.

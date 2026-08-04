@@ -7,12 +7,10 @@ EXAMPLES := $(wildcard examples/*.typ)
 
 all: test
 
-manual: manual.pdf
-
-manual.pdf: manual.typ lib.typ src/*.typ
+manual:
 	$(TYPST) manual.typ manual.pdf
 
-test: manual
+test: plugin manual
 test:
 	@for t in $(TESTS); do \
 	  echo "== $$t"; \
@@ -47,10 +45,7 @@ plugin:
 	cargo build --manifest-path ../Cargo.toml -p chalks-engine --release --target wasm32-unknown-unknown
 	@mkdir -p plugin
 	cp ../target/wasm32-unknown-unknown/release/chalks_engine.wasm $(WASM_OUT)
-	@if command -v wasm-opt >/dev/null 2>&1; then \
-	  echo "wasm-opt -Oz"; wasm-opt -Oz $(WASM_OUT) -o $(WASM_OUT); \
-	else echo "wasm-opt not found, skipping (optional)"; fi
 	@ls -l $(WASM_OUT)
 
 clean:
-	rm -f tests/*.pdf tests/errors/*.pdf examples/*.pdf manual.pdf
+	rm -f tests/*.pdf tests/errors/*.pdf examples/*.pdf
