@@ -1,4 +1,4 @@
-.PHONY: all test examples images plugin clean
+.PHONY: all test examples images plugin clean manual
 
 TYPST = typst compile --root .
 TESTS := $(wildcard tests/test-*.typ)
@@ -7,6 +7,12 @@ EXAMPLES := $(wildcard examples/*.typ)
 
 all: test
 
+manual: manual.pdf
+
+manual.pdf: manual.typ lib.typ src/*.typ
+	$(TYPST) manual.typ manual.pdf
+
+test: manual
 test:
 	@for t in $(TESTS); do \
 	  echo "== $$t"; \
