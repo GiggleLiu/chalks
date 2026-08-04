@@ -1,4 +1,4 @@
-use crate::geom::{add, catmull_rom, cumlen, dist, mul, normals, sample, Pt};
+use crate::geom::{add, catmull_rom, cumlen, mul, normals, sample, Pt};
 use crate::rng::Rng;
 use crate::schema::{Path, StrokeStyle, Subpath};
 
