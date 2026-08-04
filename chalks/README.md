@@ -5,6 +5,13 @@ built as point lists in pure Typst, then a Rust → WASM engine (`chalks-engine`
 perturbs them into sketchy, variable-width filled outlines — jitter, bowing,
 taper, multi-pass strokes, and three doodle fill patterns.
 
+## Gallery
+
+| | | |
+|---|---|---|
+| ![Gallery of primitives and fills](images/gallery.png) | ![Annotated mathematical equations](images/annotated-equation.png) | ![Chalk-themed dark slide](images/chalkboard.png) |
+| All primitives and fill patterns | Pin and annotate math content | Chalk theme on dark backgrounds |
+
 ## Quick start
 
 ```typst

@@ -7,4 +7,4 @@ license = "MIT"
 description = "Pencil and chalk style hand-drawn figures and annotations."
 repository = "https://github.com/GiggleLiu/sci-sketch"
 compiler = "0.14.0"
-exclude = ["/tests/*", "/examples/*", "/manual.typ", "/manual.pdf", "/Makefile"]
+exclude = ["/tests/*", "/examples/*", "/manual.typ", "/manual.pdf", "/Makefile", "/images/*"]
