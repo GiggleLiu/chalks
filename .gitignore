@@ -1,0 +1,6 @@
+target/
+_pkgroot/
+*.pdf
+!chalks/manual.pdf
+chalks/tests/**/*.png
+.DS_Store

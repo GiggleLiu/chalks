@@ -1,0 +1,10 @@
+[package]
+name = "chalks"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["Jinguo Liu <@GiggleLiu>"]
+license = "MIT"
+description = "Pencil and chalk style hand-drawn figures and annotations."
+repository = "https://github.com/GiggleLiu/sci-sketch"
+compiler = "0.14.0"
+exclude = ["/tests/*", "/examples/*", "/manual.typ", "/manual.pdf", "/Makefile"]
