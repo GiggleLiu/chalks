@@ -1,13 +1,29 @@
 use serde::{Deserialize, Serialize};
 
-fn d_smooth() -> f64 { 0.7 }
-fn d_rough() -> f64 { 1.0 }
-fn d_width() -> f64 { 1.2 }
-fn d_taper() -> f64 { 0.5 }
-fn d_passes() -> u32 { 1 }
-fn d_pattern() -> String { "hachure".into() }
-fn d_angle() -> f64 { 45.0 }
-fn d_spacing() -> f64 { 4.0 }
+fn d_smooth() -> f64 {
+    0.7
+}
+fn d_rough() -> f64 {
+    1.0
+}
+fn d_width() -> f64 {
+    1.2
+}
+fn d_taper() -> f64 {
+    0.5
+}
+fn d_passes() -> u32 {
+    1
+}
+fn d_pattern() -> String {
+    "hachure".into()
+}
+fn d_angle() -> f64 {
+    45.0
+}
+fn d_spacing() -> f64 {
+    4.0
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct StrokeStyle {
@@ -26,8 +42,11 @@ pub struct StrokeStyle {
 impl Default for StrokeStyle {
     fn default() -> Self {
         StrokeStyle {
-            smoothness: d_smooth(), roughness: d_rough(), width: d_width(),
-            taper: d_taper(), passes: d_passes(),
+            smoothness: d_smooth(),
+            roughness: d_rough(),
+            width: d_width(),
+            taper: d_taper(),
+            passes: d_passes(),
         }
     }
 }
@@ -51,8 +70,12 @@ pub struct FillStyle {
 impl Default for FillStyle {
     fn default() -> Self {
         FillStyle {
-            smoothness: d_smooth(), roughness: d_rough(), width: d_width(),
-            pattern: d_pattern(), angle: d_angle(), spacing: d_spacing(),
+            smoothness: d_smooth(),
+            roughness: d_rough(),
+            width: d_width(),
+            pattern: d_pattern(),
+            angle: d_angle(),
+            spacing: d_spacing(),
         }
     }
 }
@@ -95,7 +118,9 @@ pub struct Response {
 }
 
 fn unit(name: &str, v: f64) -> Result<(), String> {
-    if (0.0..=1.0).contains(&v) { Ok(()) } else {
+    if (0.0..=1.0).contains(&v) {
+        Ok(())
+    } else {
         Err(format!("chalks-engine: {name} must be in [0, 1], got {v}"))
     }
 }
@@ -134,9 +159,9 @@ impl FillRequest {
         if self.style.spacing <= 0.0 {
             return Err("chalks-engine: spacing must be positive".into());
         }
-        if !["hachure", "scribble", "shade"].contains(&self.style.pattern.as_str()) {
+        if !["hachure", "shade"].contains(&self.style.pattern.as_str()) {
             return Err(format!(
-                "chalks-engine: unknown fill pattern: {} (expected hachure, scribble, or shade)",
+                "chalks-engine: unknown fill pattern: {} (expected hachure or shade)",
                 self.style.pattern
             ));
         }

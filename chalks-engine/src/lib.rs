@@ -4,11 +4,11 @@ use wasm_minimal_protocol::*;
 #[cfg(target_arch = "wasm32")]
 initiate_protocol!();
 
+pub mod fill;
 pub mod geom;
 pub mod rng;
 pub mod schema;
 pub mod stroke;
-pub mod fill;
 
 #[cfg_attr(target_arch = "wasm32", wasm_func)]
 pub fn version() -> Vec<u8> {
@@ -80,7 +80,10 @@ mod tests {
         let mut buf = Vec::new();
         ciborium::into_writer(&req, &mut buf).unwrap();
         let err = stroke(&buf).unwrap_err();
-        assert!(err.contains("chalks-engine: stroke needs at least 2 points"), "{err}");
+        assert!(
+            err.contains("chalks-engine: stroke needs at least 2 points"),
+            "{err}"
+        );
     }
 
     #[test]
@@ -92,13 +95,29 @@ mod tests {
         };
         let mut buf = Vec::new();
         ciborium::into_writer(&req, &mut buf).unwrap();
-        let resp: schema::Response =
-            ciborium::from_reader(&fill(&buf).unwrap()[..]).unwrap();
+        let resp: schema::Response = ciborium::from_reader(&fill(&buf).unwrap()[..]).unwrap();
         assert!(!resp.paths.is_empty());
 
         req.style.pattern = "polkadots".into();
         buf.clear();
         ciborium::into_writer(&req, &mut buf).unwrap();
         assert!(fill(&buf).unwrap_err().contains("unknown fill pattern"));
+    }
+
+    #[test]
+    fn fill_entry_rejects_scribble_pattern() {
+        let mut req = schema::FillRequest {
+            boundaries: vec![vec![[0.0, 0.0], [50.0, 0.0], [50.0, 50.0]]],
+            style: Default::default(),
+            seed: 3,
+        };
+        req.style.pattern = "scribble".into();
+        let mut buf = Vec::new();
+        ciborium::into_writer(&req, &mut buf).unwrap();
+        let err = fill(&buf).unwrap_err();
+        assert!(
+            err.contains("chalks-engine: unknown fill pattern: scribble"),
+            "{err}"
+        );
     }
 }

@@ -1,9 +1,9 @@
-#import "../lib.typ": arrow, brace, circle, fn-curve, line, rect, sketch
+#import "@preview/chalks:0.1.0": arrow, brace, circle, fn-curve, line, rect, sketch
 #set page(width: 260pt, height: 320pt, margin: 10pt)
 
 #sketch(240pt, 140pt,
   rect((10, 10), (90, 60), fill: "hachure"),
-  circle((160, 45), 30, fill: "scribble", color: rgb("#8a4a3a")),
+  circle((160, 45), 30, fill: "shade", color: rgb("#8a4a3a")),
   arrow((105, 40), (128, 40)),
   brace((10, 80), (100, 80), amplitude: 10),
 )

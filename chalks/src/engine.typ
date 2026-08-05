@@ -3,10 +3,18 @@
 
 #let _engine = plugin("../plugin/chalks_engine.wasm")
 
-/// Plugin version string (smoke check that the binary loads).
+/// Returns the bundled Chalks WASM engine version string.
+///
+/// This is mainly useful for diagnostics and package smoke tests.
 #let engine-version() = str(_engine.version())
 
-#let _pt(p) = (float(p.at(0)), float(p.at(1)))
+// Round to 1e-6 pt: calc.sin/cos/exp go through the platform math library,
+// whose last-ULP results vary across OSes; unrounded they would re-roll
+// auto-seed and make committed example images irreproducible in CI.
+#let _pt(p) = (
+  calc.round(float(p.at(0)), digits: 6),
+  calc.round(float(p.at(1)), digits: 6),
+)
 
 /// Engine paths -> filled curve elements, placed at (0,0) of the caller's
 /// frame. weight scales opacity (shade layering).
@@ -33,12 +41,25 @@
   }
 }
 
-/// Low-level hand-drawn stroke through `points` ((x, y) floats, pt, y-down).
+/// Draws a low-level hand-sketched stroke directly through explicit points.
+///
+/// Prefer `path` inside `sketch` for normal figures. This function bypasses
+/// shape builders and returns placed content directly.
+///
+/// - points (array): Two or more `(x, y)` points as numbers in points, with
+///   positive y downward.
+/// - closed (bool): Join the last point to the first. Default: `false`.
+/// - style (dictionary): Engine stroke keys: `smoothness`, `roughness`,
+///   `width`, `taper`, and `passes`; rendering keys `color` and `opacity` are
+///   also accepted. Default: `(:)`.
+/// - seed (auto, int): Deterministic RNG seed; `auto` derives one from the
+///   geometry. Default: `auto`.
 #let raw-stroke(points, closed: false, style: (:), seed: auto) = context {
   let s = resolve-style(style)
-  let seed = if seed == auto { auto-seed(("stroke", points, closed)) } else { seed }
+  let pts = points.map(_pt)
+  let seed = if seed == auto { auto-seed(("stroke", pts, closed)) } else { seed }
   let req = cbor.encode((
-    points: points.map(_pt),
+    points: pts,
     closed: closed,
     style: engine-stroke-style(s),
     seed: seed,
@@ -46,12 +67,24 @@
   render-paths(cbor(_engine.stroke(req)).paths, s.color, s.opacity)
 }
 
-/// Low-level doodle fill of closed boundary rings (even-odd: nested = hole).
+/// Draws a low-level fill directly from explicit closed boundary rings.
+///
+/// Nested rings are holes under the even-odd rule. Prefer a filled shape or
+/// `region` inside `sketch` for normal figures.
+///
+/// - boundaries (array): Array of rings, each containing at least three
+///   `(x, y)` points as numbers in points, with positive y downward.
+/// - style (dictionary): Fill keys: `pattern` (`"hachure"` or `"shade"`),
+///   `smoothness`, `roughness`, `width`, `angle`, and `spacing`; `color` and
+///   `opacity` are also accepted. Default: `(:)`.
+/// - seed (auto, int): Deterministic RNG seed; `auto` derives one from the
+///   boundaries. Default: `auto`.
 #let raw-fill(boundaries, style: (:), seed: auto) = context {
   let s = resolve-style(style)
-  let seed = if seed == auto { auto-seed(("fill", boundaries)) } else { seed }
+  let bs = boundaries.map(b => b.map(_pt))
+  let seed = if seed == auto { auto-seed(("fill", bs)) } else { seed }
   let req = cbor.encode((
-    boundaries: boundaries.map(b => b.map(_pt)),
+    boundaries: bs,
     style: engine-fill-style(s),
     seed: seed,
   ))

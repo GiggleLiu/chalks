@@ -1,7 +1,11 @@
 # chalks — pencil/chalk-style drawing for Typst
 
 **Date:** 2026-08-04
-**Status:** Draft for review
+**Status:** Historical design draft — kept as a point-in-time record. The
+shipped package differs in places (notably the `scribble` fill was removed
+before the 0.1.0 release; public fills are `hachure` and `shade` only).
+See [`chalks/README.md`](../../../chalks/README.md) for the current API and
+style-key reference.
 **Repo:** `sci-sketch` (monorepo, scenery-style layout)
 
 ## Purpose

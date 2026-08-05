@@ -59,6 +59,26 @@
   (x: pos.x.pt() - origin.x, y: pos.y.pt() - origin.y - m.value.h, w: m.value.w, h: m.value.h)
 }
 
+/// Draws one hand-sketched annotation around or between named `pin`s.
+///
+/// Exactly one of `circle`, `underline`, `box`, or `arrow` must be supplied.
+/// Call `annotate` after its pins in top-level page flow; nested grid, stack,
+/// and table frames do not share the required page coordinate system.
+///
+/// ```typst
+/// The key #pin("idea")[idea] deserves emphasis.
+/// #annotate(circle: "idea", pad: 4pt, roughness: 1.3)
+/// ```
+///
+/// - circle (none, str): Name of a pin to circle. Default: `none`.
+/// - underline (none, str): Name of a pin to underline. Default: `none`.
+/// - box (none, str): Name of a pin to box. Default: `none`.
+/// - arrow (none, array): Pair `(from-name, to-name)` identifying two pins.
+///   Default: `none`.
+/// - pad (length): Clearance around pinned content. Default: `3pt`.
+/// - dx (length): Horizontal placement adjustment. Default: `0pt`.
+/// - dy (length): Vertical placement adjustment. Default: `0pt`.
+/// - ..style (arguments): Shared stroke style overrides.
 #let annotate(
   circle: none,
   underline: none,

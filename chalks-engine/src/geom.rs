@@ -7,18 +7,30 @@ pub struct CubicSeg {
     pub to: Pt,
 }
 
-pub fn add(a: Pt, b: Pt) -> Pt { [a[0] + b[0], a[1] + b[1]] }
-pub fn sub(a: Pt, b: Pt) -> Pt { [a[0] - b[0], a[1] - b[1]] }
-pub fn mul(a: Pt, s: f64) -> Pt { [a[0] * s, a[1] * s] }
-pub fn norm(a: Pt) -> f64 { (a[0] * a[0] + a[1] * a[1]).sqrt() }
-pub fn dist(a: Pt, b: Pt) -> f64 { norm(sub(a, b)) }
+pub fn add(a: Pt, b: Pt) -> Pt {
+    [a[0] + b[0], a[1] + b[1]]
+}
+pub fn sub(a: Pt, b: Pt) -> Pt {
+    [a[0] - b[0], a[1] - b[1]]
+}
+pub fn mul(a: Pt, s: f64) -> Pt {
+    [a[0] * s, a[1] * s]
+}
+pub fn norm(a: Pt) -> f64 {
+    (a[0] * a[0] + a[1] * a[1]).sqrt()
+}
+pub fn dist(a: Pt, b: Pt) -> f64 {
+    norm(sub(a, b))
+}
 
 /// Catmull-Rom through `pts` as cubic beziers; `smoothness` in [0,1] scales the
 /// tangent handles (0 => straight polyline, 1 => full flow). Open curves use
 /// one-sided tangents at the ends; closed curves wrap (one segment per point).
 pub fn catmull_rom(pts: &[Pt], closed: bool, smoothness: f64) -> Vec<CubicSeg> {
     let n = pts.len();
-    if n < 2 { return Vec::new(); }
+    if n < 2 {
+        return Vec::new();
+    }
     let tangent = |i: usize| -> Pt {
         if closed {
             let prev = pts[(i + n - 1) % n];
@@ -131,7 +143,11 @@ mod tests {
         let s = sample(pts[0], &segs, 2.0);
         assert_eq!(s.first().unwrap(), &[0.0, 0.0]);
         assert!(dist(*s.last().unwrap(), [100.0, 0.0]) < 1e-9);
-        assert!(s.len() >= 40, "100pt chord at step 2 must give >= 40 samples, got {}", s.len());
+        assert!(
+            s.len() >= 40,
+            "100pt chord at step 2 must give >= 40 samples, got {}",
+            s.len()
+        );
     }
 
     #[test]

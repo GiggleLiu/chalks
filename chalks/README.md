@@ -3,7 +3,7 @@
 Hand-drawn pencil/chalk-style figures and annotations for Typst. Shapes are
 built as point lists in pure Typst, then a Rust → WASM engine (`chalks-engine`)
 perturbs them into sketchy, variable-width filled outlines — jitter, bowing,
-taper, multi-pass strokes, and three doodle fill patterns.
+taper, multi-pass strokes, and two reliable fill patterns.
 
 ## Gallery
 
@@ -15,14 +15,18 @@ taper, multi-pass strokes, and three doodle fill patterns.
 ## Quick start
 
 ```typst
-#import "@preview/chalks:0.1.0": *
+#import "@preview/chalks:0.1.0" as chalks
 
-#sketch(200pt, 100pt,
-  rect((10, 10), (90, 60), fill: "hachure"),
-  circle((150, 40), 30, fill: "scribble"),
-  arrow((100, 40), (120, 40)),
+#chalks.sketch(200pt, 100pt,
+  chalks.rect((10, 10), (90, 60), fill: "hachure"),
+  chalks.circle((150, 40), 30, fill: "shade"),
+  chalks.arrow((100, 40), (120, 40)),
 )
 ```
+
+The module import avoids shadowing Typst's built-in `line`, `rect`, and
+`ellipse` functions. Import individual chalks functions explicitly when a
+flat local API is more convenient.
 
 `sketch(width, height, ..elements)` lays out primitives (`line`, `arrow`,
 `rect`, `ellipse`, `circle`, `polygon`, `region`, `brace`, `bracket`, `path`,
@@ -51,7 +55,7 @@ clipped away or offset from its pin).
 ## Style keys
 
 Every shape/stroke/fill call accepts style overrides as named arguments
-(`roughness: 1.5`, `fill: "scribble"`, `seed: 42`, …); unset keys fall back to
+(`roughness: 1.5`, `fill: "shade"`, `seed: 42`, …); unset keys fall back to
 the active theme, then to these defaults:
 
 | Key          | Applies to    | Meaning                                                         | Default |
@@ -61,14 +65,19 @@ the active theme, then to these defaults:
 | `width`      | stroke + fill | nominal stroke width (pt)                                       | 1.2     |
 | `taper`      | stroke        | pressure variation 0-1 (0 = uniform, 1 = strong taper at ends)   | 0.5     |
 | `passes`     | stroke        | number of overlapping strokes (1 = single, 2 = sketchy double)   | 1       |
-| `pattern`    | fill          | `hachure` \| `scribble` \| `shade`                               | hachure |
-| `angle`      | fill          | hachure/scribble direction (deg)                                 | 45      |
+| `pattern`    | fill          | `hachure` \| `shade`                                              | hachure |
+| `angle`      | fill          | hachure/shade direction (deg)                                    | 45      |
 | `spacing`    | fill          | gap between doodle lines (pt)                                    | 4       |
 | `color`      | stroke + fill | fill/stroke color                                                 | `#44464a` |
 | `opacity`    | stroke + fill | overall opacity                                                   | 100%    |
 
 Seeds are derived deterministically from input geometry by default, so
 unchanged figures never re-roll between compiles.
+
+For `path`, `width` is the full nominal stroke thickness (so a desired
+half-width/radius of 3 pt means `width: 6`), while `smoothness` controls how
+roundly the curve passes through its points. Chalks does not currently provide
+a fixed-radius corner-rounding parameter.
 
 ## Themes
 
@@ -95,18 +104,22 @@ make plugin
 ```
 
 run from the repo root (or `make plugin` inside `chalks/`, which delegates
-to the same recipe).
+to the same recipe). Builds are byte-reproducible per platform, but rustc
+emits functions in a host-dependent order, so the committed artifact is
+always the x86_64 Linux build (what CI verifies); regenerate it from any
+host with `make plugin-linux` (requires Docker).
 
 ## Development
 
 From the repo root (needed so `@preview/chalks:0.1.0` resolves for examples):
 
 ```sh
-make test      # compile tests + manual, run error-message assertions
+make test      # rebuild plugin, compile tests + manual, run error-message assertions
 make examples  # compile chalks/examples/*.typ via @preview/chalks:0.1.0
 ```
 
-See `manual.typ` for a rendered walkthrough of the API (every snippet shown
-is compiled, not just illustrative), and `examples/` for complete figures:
-`gallery.typ` (every primitive + fill), `annotated-equation.typ` (pin/annotate
-on math), `chalkboard.typ` (chalk theme on a dark page).
+See the [manual source](manual.typ) or [compiled PDF](manual.pdf) for a rendered
+walkthrough of the API (every snippet shown is compiled, not just illustrative).
+Complete figures are available as [the primitive gallery](examples/gallery.typ),
+[an annotated equation](examples/annotated-equation.typ), and
+[a chalkboard theme example](examples/chalkboard.typ).

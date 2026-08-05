@@ -15,7 +15,6 @@ pub fn run(boundaries: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path
         })
         .collect();
     match style.pattern.as_str() {
-        "scribble" => scribble(&polys, style, rng),
         "shade" => shade(&polys, style, rng),
         _ => hachure(&polys, style, style.angle, style.spacing, 1.0, rng),
     }
@@ -34,14 +33,25 @@ fn doodle_style(style: &FillStyle, smoothness: f64) -> StrokeStyle {
 
 /// Horizontal scanline segments of `polys` (even-odd), in rotated space.
 /// Returns rows of segments, one row per scanline, back-rotated to user space.
-fn rows(polys: &[Vec<Pt>], angle_deg: f64, spacing: f64, rng: &mut Rng, rough: f64) -> Vec<Vec<[Pt; 2]>> {
+fn rows(
+    polys: &[Vec<Pt>],
+    angle_deg: f64,
+    spacing: f64,
+    rng: &mut Rng,
+    rough: f64,
+) -> Vec<Vec<[Pt; 2]>> {
     let a = angle_deg.to_radians();
     let (cs, sn) = (a.cos(), a.sin());
     let rot = |p: Pt| -> Pt { [p[0] * cs + p[1] * sn, -p[0] * sn + p[1] * cs] };
     let unrot = |p: Pt| -> Pt { [p[0] * cs - p[1] * sn, p[0] * sn + p[1] * cs] };
-    let rp: Vec<Vec<Pt>> = polys.iter().map(|poly| poly.iter().map(|&p| rot(p)).collect()).collect();
+    let rp: Vec<Vec<Pt>> = polys
+        .iter()
+        .map(|poly| poly.iter().map(|&p| rot(p)).collect())
+        .collect();
     let ys: Vec<f64> = rp.iter().flatten().map(|p| p[1]).collect();
-    let (ymin, ymax) = ys.iter().fold((f64::MAX, f64::MIN), |(lo, hi), &y| (lo.min(y), hi.max(y)));
+    let (ymin, ymax) = ys
+        .iter()
+        .fold((f64::MAX, f64::MIN), |(lo, hi), &y| (lo.min(y), hi.max(y)));
     let mut out = Vec::new();
     let mut y = ymin + spacing * 0.6;
     while y < ymax {
@@ -73,12 +83,26 @@ fn rows(polys: &[Vec<Pt>], angle_deg: f64, spacing: f64, rng: &mut Rng, rough: f
     out
 }
 
-fn hachure(polys: &[Vec<Pt>], style: &FillStyle, angle: f64, spacing: f64, weight: f64, rng: &mut Rng) -> Vec<Path> {
+fn hachure(
+    polys: &[Vec<Pt>],
+    style: &FillStyle,
+    angle: f64,
+    spacing: f64,
+    weight: f64,
+    rng: &mut Rng,
+) -> Vec<Path> {
     let mut paths = Vec::new();
-    for (i, row) in rows(polys, angle, spacing, rng, style.roughness).iter().enumerate() {
+    for (i, row) in rows(polys, angle, spacing, rng, style.roughness)
+        .iter()
+        .enumerate()
+    {
         for seg in row {
             // Alternate direction row by row, like a hand sweeping back and forth.
-            let pts = if i % 2 == 0 { [seg[0], seg[1]] } else { [seg[1], seg[0]] };
+            let pts = if i % 2 == 0 {
+                [seg[0], seg[1]]
+            } else {
+                [seg[1], seg[0]]
+            };
             for mut p in stroke::run(&pts, false, &doodle_style(style, 0.3), rng) {
                 p.weight *= weight;
                 paths.push(p);
@@ -86,38 +110,6 @@ fn hachure(polys: &[Vec<Pt>], style: &FillStyle, angle: f64, spacing: f64, weigh
         }
     }
     paths
-}
-
-/// One continuous serpentine doodle: rows chained end-to-end, single stroke.
-fn scribble(polys: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path> {
-    let mut spine: Vec<Pt> = Vec::new();
-    for (i, row) in rows(polys, style.angle, style.spacing, rng, style.roughness).iter().enumerate() {
-        let mut segs: Vec<[Pt; 2]> = row.clone();
-        if i % 2 == 1 {
-            segs.reverse();
-            for s in &mut segs {
-                s.swap(0, 1);
-            }
-        }
-        for s in segs {
-            // Densify segment with interior points to pin CR to the scanline and prevent overshoot
-            let step = 2.0 * style.spacing;
-            let [p0, p1] = s;
-            let len = (p1[0] - p0[0]).hypot(p1[1] - p0[1]);
-            let n_interior = ((len / step).floor() as usize).max(1);
-
-            spine.push(p0);
-            for k in 1..n_interior {
-                let t = k as f64 / n_interior as f64;
-                spine.push([p0[0] * (1.0 - t) + p1[0] * t, p0[1] * (1.0 - t) + p1[1] * t]);
-            }
-            spine.push(p1);
-        }
-    }
-    if spine.len() < 2 {
-        return Vec::new();
-    }
-    stroke::run(&spine, false, &doodle_style(style, 0.85), rng)
 }
 
 /// Layered soft shading: three lighter hachure passes at drifting angles.
@@ -143,8 +135,12 @@ mod tests {
 
     fn style(pattern: &str) -> FillStyle {
         FillStyle {
-            smoothness: 0.0, roughness: 1.0, width: 1.2,
-            pattern: pattern.into(), angle: 45.0, spacing: 6.0,
+            smoothness: 0.0,
+            roughness: 1.0,
+            width: 1.2,
+            pattern: pattern.into(),
+            angle: 45.0,
+            spacing: 6.0,
         }
     }
 
@@ -158,7 +154,7 @@ mod tests {
     #[test]
     fn all_fill_output_stays_inside_an_inflated_bbox() {
         for seed in 0..32 {
-            for pat in ["hachure", "scribble", "shade"] {
+            for pat in ["hachure", "shade"] {
                 let paths = run(&square(), &style(pat), &mut Rng::new(seed));
                 assert!(!paths.is_empty(), "{pat} seed {seed} produced nothing");
                 for p in &paths {
@@ -178,12 +174,6 @@ mod tests {
     }
 
     #[test]
-    fn scribble_is_one_continuous_doodle() {
-        let paths = run(&square(), &style("scribble"), &mut Rng::new(5));
-        assert_eq!(paths.len(), 1, "scribble is a single stroke pass");
-    }
-
-    #[test]
     fn shade_layers_carry_reduced_weights() {
         let paths = run(&square(), &style("shade"), &mut Rng::new(5));
         assert!(paths.iter().all(|p| p.weight < 1.0));
@@ -191,17 +181,19 @@ mod tests {
     }
 
     #[test]
-    fn hole_is_left_unfilled() {
-        let mut b = square();
-        b.push(vec![[40.0, 40.0], [60.0, 40.0], [60.0, 60.0], [40.0, 60.0]]); // hole (even-odd)
-        let paths = run(&b, &style("hachure"), &mut Rng::new(5));
-        for p in &paths {
-            for sp in &p.subpaths {
-                for c in &sp.cubics {
-                    for q in c {
-                        let inside_hole =
-                            q[0] > 44.0 && q[0] < 56.0 && q[1] > 44.0 && q[1] < 56.0;
-                        assert!(!inside_hole, "doodle {q:?} crosses the hole");
+    fn every_pattern_leaves_holes_unfilled() {
+        for pattern in ["hachure", "shade"] {
+            let mut b = square();
+            b.push(vec![[40.0, 40.0], [60.0, 40.0], [60.0, 60.0], [40.0, 60.0]]); // hole (even-odd)
+            let paths = run(&b, &style(pattern), &mut Rng::new(5));
+            for p in &paths {
+                for sp in &p.subpaths {
+                    for c in &sp.cubics {
+                        for q in c {
+                            let inside_hole =
+                                q[0] > 44.0 && q[0] < 56.0 && q[1] > 44.0 && q[1] < 56.0;
+                            assert!(!inside_hole, "{pattern} doodle {q:?} crosses the hole");
+                        }
                     }
                 }
             }

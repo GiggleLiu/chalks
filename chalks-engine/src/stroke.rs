@@ -96,7 +96,13 @@ mod tests {
     use crate::schema::StrokeStyle;
 
     fn style() -> StrokeStyle {
-        StrokeStyle { smoothness: 0.7, roughness: 1.0, width: 1.2, taper: 0.5, passes: 1 }
+        StrokeStyle {
+            smoothness: 0.7,
+            roughness: 1.0,
+            width: 1.2,
+            taper: 0.5,
+            passes: 1,
+        }
     }
 
     #[test]
@@ -105,7 +111,10 @@ mod tests {
         let paths = run(&pts, false, &style(), &mut Rng::new(7));
         assert_eq!(paths.len(), 1);
         assert_eq!(paths[0].subpaths.len(), 1);
-        assert!(paths[0].subpaths[0].cubics.len() >= 8, "outline must be a real curve");
+        assert!(
+            paths[0].subpaths[0].cubics.len() >= 8,
+            "outline must be a real curve"
+        );
         assert_eq!(paths[0].weight, 1.0);
 
         let mut s2 = style();
@@ -119,7 +128,11 @@ mod tests {
     fn closed_stroke_yields_outer_and_inner_ring() {
         let pts = [[0.0, 0.0], [80.0, 0.0], [80.0, 60.0], [0.0, 60.0]];
         let paths = run(&pts, true, &style(), &mut Rng::new(7));
-        assert_eq!(paths[0].subpaths.len(), 2, "closed stroke outline is an annulus");
+        assert_eq!(
+            paths[0].subpaths.len(),
+            2,
+            "closed stroke outline is an annulus"
+        );
     }
 
     #[test]
@@ -141,7 +154,12 @@ mod tests {
         for sp in &paths[0].subpaths {
             for c in &sp.cubics {
                 for p in c {
-                    assert!(p[1].abs() <= slack, "point {:?} strays past slack {}", p, slack);
+                    assert!(
+                        p[1].abs() <= slack,
+                        "point {:?} strays past slack {}",
+                        p,
+                        slack
+                    );
                     assert!(p[0] >= -slack && p[0] <= 100.0 + slack);
                 }
             }

@@ -1,4 +1,4 @@
-#import "../lib.typ": chalk, chalks-theme, ink, line, pencil, sketch
+#import "@preview/chalks:0.1.0": chalk, chalks-theme, ink, line, pencil, sketch
 #set page(width: 260pt, height: 300pt, margin: 10pt, fill: rgb("#2d3136"))
 
 #chalks-theme(chalk)
