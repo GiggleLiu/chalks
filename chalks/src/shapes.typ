@@ -117,21 +117,39 @@
 
 /// Draws a hand-sketched arrow from one point to another.
 ///
+/// Straight by default. `via:` waypoints bend the shaft through them (smoothed
+/// like `path`), and the head follows the shaft's direction of arrival at the
+/// tip — the way to draw a curved arrow in one call:
+///
+/// ```typst
+/// arrow((10, 60), (150, 60))
+/// arrow((10, 60), (150, 50), via: ((50, 15), (110, 12)))
+/// ```
+///
 /// - from (array): Tail point `(x, y)` in canvas points.
 /// - to (array): Tip point `(x, y)` in canvas points.
-/// - head (float): Arrowhead length in points, capped at 40% of the shaft.
-///   Default: `8`.
+/// - via (none, array): Waypoints the shaft passes through between `from` and
+///   `to`, in order: `((x, y), ...)`, or a bare `(x, y)` for a single
+///   waypoint. Default: `none`.
+/// - head (float): Arrowhead length in points, capped at 40% of the shaft
+///   length. Default: `8`.
 /// - ..style (arguments): Shared stroke style overrides.
-#let arrow(from, to, head: 8, ..style) = {
+#let arrow(from, to, via: none, head: 8, ..style) = {
   let s = style.named()
-  let d = _sub(to, from)
+  let waypoints = if via == none { () } else if type(via.at(0)) in (int, float) {
+    (via,) // a bare (x, y) means one waypoint
+  } else { via }
+  let pts = (from,) + waypoints + (to,)
+  let total = range(pts.len() - 1).map(i => _len(_sub(pts.at(i + 1), pts.at(i)))).sum()
+  let total = calc.max(total, 1e-6)
+  let d = _sub(to, pts.at(pts.len() - 2))
   let l = calc.max(_len(d), 1e-6)
   let t = _mul(d, 1 / l)
   let n = (-t.at(1), t.at(0))
-  let hl = calc.min(float(head), l * 0.4)
+  let hl = calc.min(float(head), total * 0.4)
   let back = _sub(to, _mul(t, hl))
   let wing = _mul(n, hl * 0.45)
-  _stroke-op((from, to), false, s) + _stroke-op(
+  _stroke-op(pts, false, s) + _stroke-op(
     (_add(back, wing), to, _sub(back, wing)),
     false,
     (smoothness: 0.2) + s,

@@ -28,6 +28,13 @@ points. There is no fixed-radius corner-rounding parameter.
 
 #example("#sketch(180pt, 75pt,\n  path(((10, 60), (55, 15), (105, 55), (170, 20)),\n    width: 2.4, smoothness: 0.8),\n)")
 
+== Arrows
+
+Straight by default; `via:` waypoints bend the shaft (smoothed like `path`)
+and the head follows the shaft's direction of arrival at the tip.
+
+#example("#sketch(180pt, 75pt,\n  arrow((10, 20), (95, 20)),\n  arrow((10, 65), (170, 55),\n    via: ((60, 30), (120, 28))),\n)")
+
 == Shapes and fills
 
 #example("#sketch(180pt, 90pt,\n  rect((10, 10), (70, 50), fill: \"hachure\"),\n  circle((130, 35), 28, fill: \"shade\"),\n)")
