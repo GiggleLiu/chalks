@@ -32,7 +32,8 @@ flat local API is more convenient.
 `rect`, `ellipse`, `circle`, `polygon`, `region`, `brace`, `bracket`, `path`,
 `fn-curve`) in a plain coordinate space and returns ordinary content —
 embeddable anywhere, no CeTZ dependency. Pass `origin: "bottom-left"` for
-y-up, math-convention plots.
+y-up, math-convention plots. `arrow` bends through `via:` waypoints for
+curved arrows, keeping the head aligned with the direction of arrival.
 
 Annotate content by name — a pin marks a spot, `annotate` draws a mark
 anchored to it, called after the pin(s) in flow order on the same page:

@@ -7,6 +7,17 @@
 #assert(not ops.first().closed)
 
 #assert.eq(arrow((0, 0), (50, 0)).len(), 2) // shaft + head
+
+#let curved = arrow((0, 0), (100, 0), via: ((30, -20), (70, -20)))
+#assert.eq(curved.len(), 2) // shaft + head
+#assert.eq(curved.first().points.len(), 4) // from + 2 waypoints + to
+#assert.eq(arrow((0, 0), (100, 0), via: (50, -20)).first().points.len(), 3) // bare (x, y) waypoint
+#let wings = curved.last().points
+#assert.eq(wings.at(1), (100.0, 0.0)) // head tip stays at `to`
+// Head follows the direction of arrival (last leg rises from (70, -20)),
+// so its base midpoint sits off the from->to chord.
+#let back-mid-y = (wings.first().at(1) + wings.last().at(1)) / 2
+#assert(back-mid-y < -1.0)
 #let r = rect((0, 0), (40, 30), fill: "hachure")
 #assert.eq(r.len(), 2)
 #assert.eq(r.first().op, "fill")
