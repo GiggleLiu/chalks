@@ -1,4 +1,4 @@
-#import "@preview/chalks:0.1.0": annotate, chalks-theme, ink, pin
+#import "@preview/chalks:0.1.1": annotate, chalks-theme, ink, pin
 #set page(width: 360pt, height: 200pt, margin: 24pt)
 #set text(size: 14pt)
 #chalks-theme(ink)
@@ -9,4 +9,5 @@ shows how #pin("mass")[mass] converts entirely into #pin("energy")[energy].
 
 #annotate(circle: "c2", color: rgb("#a03b2e"))
 #annotate(underline: "m")
-#annotate(arrow: ("mass", "energy"), dy: 16pt)
+#annotate(arrow: ("mass", "energy"), bend: 16pt,
+  label: text(size: 10pt)[equivalence])

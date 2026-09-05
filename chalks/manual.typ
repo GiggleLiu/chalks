@@ -1,4 +1,4 @@
-#import "@preview/chalks:0.1.0" as lib
+#import "@preview/chalks:0.1.1" as lib
 #set page(width: 460pt, margin: 24pt, height: auto)
 #set text(size: 10pt)
 
@@ -49,6 +49,15 @@ stacked instead of side-by-side.
 #let annotate-src = "The key #pin(\"idea\")[idea].\n#annotate(circle: \"idea\")"
 #raw(annotate-src, lang: "typst", block: true)
 #eval(annotate-src, mode: "markup", scope: scope)
+
+Use `bend` to curve a pin-to-pin arrow and `label` to describe the step.
+Positive bends go below left-to-right arrows; negative bends go above.
+Labels sit outside the bend. Leave room in the document for both.
+
+#let arrow-src = "#pin(\"start\")[$x$] becomes #pin(\"end\")[$x^2$].\n#annotate(arrow: (\"start\", \"end\"), bend: 16pt, label: [square])"
+#raw(arrow-src, lang: "typst", block: true)
+#eval(arrow-src, mode: "markup", scope: scope)
+#v(40pt)
 
 == Themes
 

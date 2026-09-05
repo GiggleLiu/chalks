@@ -1,4 +1,4 @@
-#import "@preview/chalks:0.1.0" as chalks
+#import "@preview/chalks:0.1.1" as chalks
 #set page(width: 420pt, height: auto, margin: 16pt)
 
 = chalks gallery

@@ -15,7 +15,7 @@ taper, multi-pass strokes, and two reliable fill patterns.
 ## Quick start
 
 ```typst
-#import "@preview/chalks:0.1.0" as chalks
+#import "@preview/chalks:0.1.1" as chalks
 
 #chalks.sketch(200pt, 100pt,
   chalks.rect((10, 10), (90, 60), fill: "hachure"),
@@ -39,13 +39,31 @@ Annotate content by name — a pin marks a spot, `annotate` draws a mark
 anchored to it, called after the pin(s) in flow order on the same page:
 
 ```typst
-#import "@preview/chalks:0.1.0": annotate, pin
+#import "@preview/chalks:0.1.1": annotate, pin
 
 The key #pin("idea")[idea] deserves a ring.
 #annotate(circle: "idea")
 ```
 
 `annotate` also takes `underline:`, `box:`, and `arrow: (from, to)`.
+
+Curve an arrow around nearby content with `bend` and add an optional label:
+
+```typst
+#pin("start")[$x$] becomes #pin("end")[$x^2$].
+#annotate(arrow: ("start", "end"), bend: 16pt, label: [square])
+```
+
+`bend` is a length, including `em`. Positive values bend below a left-to-right
+arrow; negative values bend above it. The default `0pt` stays straight. Labels
+sit outside the bend with `pad` clearance, or below a straight left-to-right
+arrow. Both `bend` and `label` require `arrow:`. Annotations do not reserve
+space, so leave room for the curve and label in your layout.
+
+Pin names are local to each page and may be reused on later pages. Duplicate
+names on the same page are errors. Page margins support absolute lengths,
+`em`, and percentages. Annotation `pad`, `dx`, and `dy`, and sketch dimensions
+accept `em` lengths on Typst 0.14 and 0.15.
 
 `annotate` places its mark in page coordinates, so call it — like the `pin`s
 it references — directly in top-level page flow, not nested inside a
@@ -95,6 +113,14 @@ Document-wide presets, set with `#chalks-theme(<preset>)`:
 `raw-fill(boundaries, style:, seed:)` call the engine directly on explicit
 point lists / boundary rings, bypassing the shape builders.
 
+The engine rejects non-finite numbers and excessive work with an error.
+Coordinates must be within ±1,000,000 pt, widths and spacing must be positive
+and at most 1,000,000 pt, and roughness must be in [0, 100]. A request accepts
+at most 4096 input points across all boundaries. Strokes allow 1–32 passes,
+with at most 4096 points times passes. Each fill layer allows at most 10,000
+scanlines, 10,000,000 edge checks, and 2048 hatch segments. If a fill reaches
+these limits, increase `spacing` or simplify its boundaries.
+
 ## Rebuilding the engine
 
 `plugin/chalks_engine.wasm` is a prebuilt artifact. Rebuild it with the
@@ -112,11 +138,11 @@ host with `make plugin-linux` (requires Docker).
 
 ## Development
 
-From the repo root (needed so `@preview/chalks:0.1.0` resolves for examples):
+From the repo root (needed so `@preview/chalks:0.1.1` resolves for examples):
 
 ```sh
 make test      # rebuild plugin, compile tests + manual, run error-message assertions
-make examples  # compile chalks/examples/*.typ via @preview/chalks:0.1.0
+make examples  # compile chalks/examples/*.typ via @preview/chalks:0.1.1
 ```
 
 See the [manual source](manual.typ) or [compiled PDF](manual.pdf) for a rendered
