@@ -1,4 +1,4 @@
-#import "@preview/chalks:0.1.0" as chalks
+#import "@preview/chalks:0.1.1" as chalks
 #set page(width: 360pt, height: 240pt, margin: 20pt, fill: rgb("#2d3136"))
 #set text(fill: rgb("#e8e6df"))
 #chalks.chalks-theme(chalks.chalk)

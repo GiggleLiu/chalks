@@ -1,5 +1,31 @@
 use serde::{Deserialize, Serialize};
 
+pub const MAX_POINTS: usize = 4096;
+pub const MAX_PASSES: u32 = 32;
+
+fn bounded(name: &str, value: f64, min: f64, max: f64) -> Result<(), String> {
+    if !(min..=max).contains(&value) {
+        return Err(format!(
+            "chalks-engine: {name} must be finite and in [{min}, {max}]"
+        ));
+    }
+    Ok(())
+}
+
+fn points_valid(points: &[[f64; 2]]) -> Result<(), String> {
+    if points.len() > MAX_POINTS {
+        return Err(format!(
+            "chalks-engine: at most {MAX_POINTS} input points are supported"
+        ));
+    }
+    for p in points {
+        for &v in p {
+            bounded("coordinate", v, -1e6, 1e6)?;
+        }
+    }
+    Ok(())
+}
+
 fn d_smooth() -> f64 {
     0.7
 }
@@ -132,11 +158,19 @@ impl StrokeRequest {
         }
         unit("smoothness", self.style.smoothness)?;
         unit("taper", self.style.taper)?;
+        points_valid(&self.points)?;
+        bounded("roughness", self.style.roughness, 0.0, 100.0)?;
+        bounded("width", self.style.width, 0.0, 1e6)?;
         if self.style.width <= 0.0 {
             return Err("chalks-engine: width must be positive".into());
         }
         if self.style.passes < 1 {
             return Err("chalks-engine: passes must be >= 1".into());
+        }
+        if self.style.passes > MAX_PASSES
+            || self.points.len() * self.style.passes as usize > MAX_POINTS
+        {
+            return Err(format!("chalks-engine: stroke allows at most {MAX_PASSES} passes and {MAX_POINTS} points times passes; reduce points or passes"));
         }
         Ok(())
     }
@@ -151,8 +185,20 @@ impl FillRequest {
             if b.len() < 3 {
                 return Err("chalks-engine: fill boundary needs at least 3 points".into());
             }
+            points_valid(b)?;
+        }
+        if self.boundaries.iter().map(Vec::len).sum::<usize>() > MAX_POINTS {
+            return Err(format!(
+                "chalks-engine: fill allows at most {MAX_POINTS} total boundary points"
+            ));
         }
         unit("smoothness", self.style.smoothness)?;
+        bounded("roughness", self.style.roughness, 0.0, 100.0)?;
+        bounded("width", self.style.width, 0.0, 1e6)?;
+        bounded("spacing", self.style.spacing, 0.0, 1e6)?;
+        if !self.style.angle.is_finite() {
+            return Err("chalks-engine: angle must be finite".into());
+        }
         if self.style.width <= 0.0 {
             return Err("chalks-engine: width must be positive".into());
         }

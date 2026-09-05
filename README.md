@@ -20,34 +20,34 @@ with no external tooling.
 
 | Package | Purpose | Version |
 | --- | --- | --- |
-| [`chalks`](chalks/) | Sketch canvas, shape/curve builders, pin-anchored annotations, and `pencil`/`ink`/`chalk` themes. | 0.1.0 |
-| [`chalks-engine`](chalks-engine/) | Rust crate (compiled to a bundled WASM plugin) generating the hand-drawn geometry: smoothing, jitter, taper, hachure/shade fills. | 0.1.0 |
+| [`chalks`](chalks/) | Sketch canvas, shape/curve builders, pin-anchored annotations, and `pencil`/`ink`/`chalk` themes. | 0.1.1 |
+| [`chalks-engine`](chalks-engine/) | Rust crate (compiled to a bundled WASM plugin) generating the hand-drawn geometry: smoothing, jitter, taper, hachure/shade fills. | 0.1.1 |
 
 Only two operations cross the WASM boundary — `stroke` and `fill` — both
 deterministic per seed, so unchanged figures never re-roll between compiles.
 
 ## Installation
 
-Once published to [Typst Universe](https://typst.app/universe), importing it
-is all you need — Typst downloads the package on first compile:
+Chalks is published on [Typst Universe](https://typst.app/universe/package/chalks).
+Typst downloads published versions on first compile:
 
 ```typst
-#import "@preview/chalks:0.1.0" as chalks
+#import "@preview/chalks:0.1.1" as chalks
 ```
 
-Until then (or to use your local checkout), clone the repo and link the
-package into Typst's local package directory:
+To use this checkout, including a release awaiting Universe approval, clone
+the repo and link the package into Typst's local package directory:
 
 ```sh
 git clone https://github.com/GiggleLiu/chalks
 cd chalks
-make install   # symlinks chalks/ into {data-dir}/typst/packages/preview/chalks/0.1.0
+make install   # symlinks chalks/ into {data-dir}/typst/packages/preview/chalks/0.1.1
 ```
 
-after which the same `@preview/chalks:0.1.0` import resolves locally. To do
+after which the same `@preview/chalks:0.1.1` import resolves locally. To do
 it by hand instead, symlink the `chalks/` directory to
-`~/Library/Application Support/typst/packages/preview/chalks/0.1.0` (macOS)
-or `${XDG_DATA_HOME:-~/.local/share}/typst/packages/preview/chalks/0.1.0`
+`~/Library/Application Support/typst/packages/preview/chalks/0.1.1` (macOS)
+or `${XDG_DATA_HOME:-~/.local/share}/typst/packages/preview/chalks/0.1.1`
 (Linux).
 
 ## Quick start
@@ -55,7 +55,7 @@ or `${XDG_DATA_HOME:-~/.local/share}/typst/packages/preview/chalks/0.1.0`
 A sketch is a plain coordinate canvas of hand-drawn primitives:
 
 ```typst
-#import "@preview/chalks:0.1.0" as chalks
+#import "@preview/chalks:0.1.1" as chalks
 
 #chalks.sketch(240pt, 120pt,
   chalks.rect((10, 10), (90, 60), fill: "hachure"),
@@ -69,10 +69,17 @@ Annotations anchor onto typeset content by name — pin a spot, then draw on
 it from anywhere later on the page:
 
 ```typst
-#import "@preview/chalks:0.1.0": annotate, pin
+#import "@preview/chalks:0.1.1": annotate, pin
 
 $ E = m #pin("c2")[$c^2$] $
 #annotate(circle: "c2", color: red)
+```
+
+Pin-to-pin arrows support curves and labels in v0.1.1:
+
+```typst
+#pin("start")[$x$] becomes #pin("end")[$x^2$].
+#annotate(arrow: ("start", "end"), bend: 16pt, label: [square])
 ```
 
 Every call accepts style overrides (`roughness: 1.5`, `smoothness: 0.2`,
@@ -95,6 +102,12 @@ Design rationale and implementation plan live in
 [`docs/superpowers/specs/2026-08-04-chalks-design.md`](docs/superpowers/specs/2026-08-04-chalks-design.md)
 and
 [`docs/superpowers/plans/2026-08-04-chalks.md`](docs/superpowers/plans/2026-08-04-chalks.md).
+
+CI runs the full suite on Typst 0.14.2 and 0.15.1. Committed images use
+0.14.2 so compiler rendering changes do not alter the reference images.
+Release changes are recorded in [CHANGELOG.md](CHANGELOG.md). A GitHub release
+is available immediately; the matching `@preview` import becomes available
+after its submission to `typst/packages` is merged and deployed.
 
 ## License
 

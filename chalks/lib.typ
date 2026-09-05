@@ -9,4 +9,4 @@
 #import "src/annotate.typ": annotate
 
 /// Chalks package version.
-#let chalks-version = "0.1.0"
+#let chalks-version = "0.1.1"

@@ -11,17 +11,23 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        typst: ["0.14.2", "0.15.1"]
     steps:
       - uses: actions/checkout@v6
       - uses: typst-community/setup-typst@v5
         with:
-          typst-version: 0.14.2
+          typst-version: ${{ matrix.typst }}
       - run: rustup component add clippy
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: make test
       - run: make images
+        if: matrix.typst == '0.14.2'
       - name: Check committed generated artifacts
+        if: matrix.typst == '0.14.2'
         run: git diff --exit-code -- chalks/plugin/chalks_engine.wasm chalks/images
       - name: typst-package-check
         run: docker run --rm -v "$PWD/chalks:/data" ghcr.io/typst/package-check check

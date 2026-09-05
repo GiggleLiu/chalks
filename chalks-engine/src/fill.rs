@@ -3,10 +3,16 @@ use crate::rng::Rng;
 use crate::schema::{FillStyle, Path, StrokeStyle};
 use crate::stroke; // the stroke pipeline module (coexists with `fn stroke` in lib.rs)
 
+const MAX_SCANLINES: usize = 10_000;
+const MAX_EDGE_CHECKS: usize = 10_000_000;
+const MAX_FILL_SEGMENTS: usize = 2048;
+const FILL_LIMIT: &str =
+    "chalks-engine: fill work limit exceeded; increase spacing or simplify boundaries";
+
 /// Doodle-fill closed region(s). Boundaries are smoothed per `smoothness`
 /// (same rule as stroke), then scanline-hachured in rotated space. Even-odd:
 /// a boundary inside another is a hole.
-pub fn run(boundaries: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path> {
+pub fn run(boundaries: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Result<Vec<Path>, String> {
     let polys: Vec<Vec<Pt>> = boundaries
         .iter()
         .map(|b| {
@@ -39,7 +45,7 @@ fn rows(
     spacing: f64,
     rng: &mut Rng,
     rough: f64,
-) -> Vec<Vec<[Pt; 2]>> {
+) -> Result<Vec<Vec<[Pt; 2]>>, String> {
     let a = angle_deg.to_radians();
     let (cs, sn) = (a.cos(), a.sin());
     let rot = |p: Pt| -> Pt { [p[0] * cs + p[1] * sn, -p[0] * sn + p[1] * cs] };
@@ -53,8 +59,14 @@ fn rows(
         .iter()
         .fold((f64::MAX, f64::MIN), |(lo, hi), &y| (lo.min(y), hi.max(y)));
     let mut out = Vec::new();
+    let mut scanlines = 0;
+    let mut segments = 0;
     let mut y = ymin + spacing * 0.6;
     while y < ymax {
+        scanlines += 1;
+        if scanlines > MAX_SCANLINES || scanlines * ys.len() > MAX_EDGE_CHECKS {
+            return Err(FILL_LIMIT.into());
+        }
         let yj = y + rng.tri() * 0.15 * spacing * rough;
         let mut xs: Vec<f64> = Vec::new();
         for poly in &rp {
@@ -66,21 +78,29 @@ fn rows(
                 }
             }
         }
-        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        xs.sort_by(f64::total_cmp);
         let mut row = Vec::new();
         for pair in xs.chunks_exact(2) {
             let inset = rng.range(0.0, 0.4 * spacing * rough);
             let (x0, x1) = (pair[0] + inset, pair[1] - inset);
             if x1 - x0 > spacing * 0.5 {
+                segments += 1;
+                if segments > MAX_FILL_SEGMENTS {
+                    return Err(FILL_LIMIT.into());
+                }
                 row.push([unrot([x0, yj]), unrot([x1, yj])]);
             }
         }
         if !row.is_empty() {
             out.push(row);
         }
-        y += spacing * rng.range(0.9, 1.1);
+        let next = y + spacing * rng.range(0.9, 1.1);
+        if next <= y {
+            return Err(FILL_LIMIT.into());
+        }
+        y = next;
     }
-    out
+    Ok(out)
 }
 
 fn hachure(
@@ -90,9 +110,9 @@ fn hachure(
     spacing: f64,
     weight: f64,
     rng: &mut Rng,
-) -> Vec<Path> {
+) -> Result<Vec<Path>, String> {
     let mut paths = Vec::new();
-    for (i, row) in rows(polys, angle, spacing, rng, style.roughness)
+    for (i, row) in rows(polys, angle, spacing, rng, style.roughness)?
         .iter()
         .enumerate()
     {
@@ -109,18 +129,18 @@ fn hachure(
             }
         }
     }
-    paths
+    Ok(paths)
 }
 
 /// Layered soft shading: three lighter hachure passes at drifting angles.
-fn shade(polys: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Vec<Path> {
+fn shade(polys: &[Vec<Pt>], style: &FillStyle, rng: &mut Rng) -> Result<Vec<Path>, String> {
     let layers = [(0.0, 0.55), (-8.0, 0.35), (6.0, 0.25)];
     let mut out = Vec::new();
     for (da, w) in layers {
         let angle = style.angle + da + rng.tri() * 2.0;
-        out.extend(hachure(polys, style, angle, style.spacing * 1.3, w, rng));
+        out.extend(hachure(polys, style, angle, style.spacing * 1.3, w, rng)?);
     }
-    out
+    Ok(out)
 }
 
 #[cfg(test)]
@@ -146,7 +166,7 @@ mod tests {
 
     #[test]
     fn hachure_covers_the_square_with_many_lines() {
-        let paths = run(&square(), &style("hachure"), &mut Rng::new(5));
+        let paths = run(&square(), &style("hachure"), &mut Rng::new(5)).unwrap();
         // 100pt tall square at 45deg/6pt spacing -> on the order of 20 lines.
         assert!(paths.len() >= 12, "got only {} hachure paths", paths.len());
     }
@@ -155,7 +175,7 @@ mod tests {
     fn all_fill_output_stays_inside_an_inflated_bbox() {
         for seed in 0..32 {
             for pat in ["hachure", "shade"] {
-                let paths = run(&square(), &style(pat), &mut Rng::new(seed));
+                let paths = run(&square(), &style(pat), &mut Rng::new(seed)).unwrap();
                 assert!(!paths.is_empty(), "{pat} seed {seed} produced nothing");
                 for p in &paths {
                     for sp in &p.subpaths {
@@ -175,7 +195,7 @@ mod tests {
 
     #[test]
     fn shade_layers_carry_reduced_weights() {
-        let paths = run(&square(), &style("shade"), &mut Rng::new(5));
+        let paths = run(&square(), &style("shade"), &mut Rng::new(5)).unwrap();
         assert!(paths.iter().all(|p| p.weight < 1.0));
         assert!(paths.len() > 12, "shade must layer multiple hachures");
     }
@@ -185,7 +205,7 @@ mod tests {
         for pattern in ["hachure", "shade"] {
             let mut b = square();
             b.push(vec![[40.0, 40.0], [60.0, 40.0], [60.0, 60.0], [40.0, 60.0]]); // hole (even-odd)
-            let paths = run(&b, &style(pattern), &mut Rng::new(5));
+            let paths = run(&b, &style(pattern), &mut Rng::new(5)).unwrap();
             for p in &paths {
                 for sp in &p.subpaths {
                     for c in &sp.cubics {
@@ -202,8 +222,8 @@ mod tests {
 
     #[test]
     fn deterministic_per_seed() {
-        let a = run(&square(), &style("hachure"), &mut Rng::new(9));
-        let b = run(&square(), &style("hachure"), &mut Rng::new(9));
+        let a = run(&square(), &style("hachure"), &mut Rng::new(9)).unwrap();
+        let b = run(&square(), &style("hachure"), &mut Rng::new(9)).unwrap();
         assert_eq!(a, b);
     }
 }
